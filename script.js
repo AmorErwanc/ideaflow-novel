@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if (workflowState.novelGenerated) {
             // 小说正文生成完成，除了小说正文区域和生成互动脚本的按钮，其他都禁用
-            return !['downloadNovelBtn', 'regenerateNovelBtn', 'generateScriptBtn'].includes(buttonId);
+            return !['downloadNovelBtn', 'regenerateNovelBtn', 'regenerateNovelBtn2', 'generateScriptBtn'].includes(buttonId);
         }
         if (workflowState.outlineGenerated) {
             // 大纲生成完成，禁用脑洞相关按钮
@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const spinner = button.querySelector('.loading-spinner');
         
         // 定义全局按钮组 - 全局禁用策略
-        const allOperationButtons = ['quickGenerateBtn', 'generateIdeasBtn', 'regenerateIdeasBtn', 'generateOutlineBtn', 'regenerateOutlineBtn', 'generateScriptBtn', 'generateNovelBtn', 'regenerateNovelBtn'];
+        const allOperationButtons = ['quickGenerateBtn', 'generateIdeasBtn', 'regenerateIdeasBtn', 'generateOutlineBtn', 'regenerateOutlineBtn', 'generateScriptBtn', 'generateNovelBtn', 'regenerateNovelBtn', 'regenerateNovelBtn2'];
         const allTabButtons = ['quickGenTab', 'customTab'];
         
         const buttonGroups = {
@@ -129,7 +129,8 @@ document.addEventListener('DOMContentLoaded', function() {
             'regenerateOutlineBtn': allOperationButtons.filter(id => id !== 'regenerateOutlineBtn').concat(allTabButtons),
             'generateScriptBtn': allOperationButtons.filter(id => id !== 'generateScriptBtn').concat(allTabButtons),
             'generateNovelBtn': allOperationButtons.filter(id => id !== 'generateNovelBtn').concat(allTabButtons),
-            'regenerateNovelBtn': allOperationButtons.filter(id => id !== 'regenerateNovelBtn' && id !== 'downloadNovelBtn').concat(allTabButtons),
+            'regenerateNovelBtn': allOperationButtons.filter(id => id !== 'regenerateNovelBtn' && id !== 'regenerateNovelBtn2' && id !== 'downloadNovelBtn').concat(allTabButtons),
+            'regenerateNovelBtn2': allOperationButtons.filter(id => id !== 'regenerateNovelBtn' && id !== 'regenerateNovelBtn2' && id !== 'downloadNovelBtn').concat(allTabButtons),
             'downloadScriptBtn': [], // 下载按钮独立，不被其他操作影响
             'downloadNovelBtn': [] // 下载按钮独立，不被其他操作影响
         };
@@ -180,7 +181,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 btnText.innerHTML = '<i class="fas fa-download mr-2"></i>下载';
             } else if (buttonId === 'generateNovelBtn') {
                 btnText.innerHTML = '<i class="fas fa-book mr-2"></i>生成小说正文';
-            } else if (buttonId === 'regenerateNovelBtn') {
+            } else if (buttonId === 'regenerateNovelBtn' || buttonId === 'regenerateNovelBtn2') {
                 btnText.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>重新生成';
             } else if (buttonId === 'downloadNovelBtn') {
                 btnText.innerHTML = '<i class="fas fa-download mr-2"></i>下载';
@@ -191,7 +192,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // 流程状态按钮管理函数
     function updateButtonStates() {
         // 获取所有需要管理的按钮
-        const allButtons = ['quickGenerateBtn', 'generateIdeasBtn', 'regenerateIdeasBtn', 'generateOutlineBtn', 'regenerateOutlineBtn', 'generateScriptBtn', 'generateNovelBtn', 'regenerateNovelBtn', 'quickGenTab', 'customTab'];
+        const allButtons = ['quickGenerateBtn', 'generateIdeasBtn', 'regenerateIdeasBtn', 'generateOutlineBtn', 'regenerateOutlineBtn', 'generateScriptBtn', 'generateNovelBtn', 'regenerateNovelBtn', 'regenerateNovelBtn2', 'quickGenTab', 'customTab'];
         
         // 根据流程状态设置按钮禁用状态
         allButtons.forEach(buttonId => {
@@ -922,6 +923,70 @@ document.addEventListener('DOMContentLoaded', function() {
             showError('重新生成小说正文失败: ' + error.message);
         } finally {
             setButtonLoading('regenerateNovelBtn', false);
+        }
+    });
+
+    // 重新生成小说正文按钮2（底部按钮）
+    document.getElementById('regenerateNovelBtn2').addEventListener('click', async function() {
+        if (!thirdWaithook) {
+            showError('请先生成小说正文');
+            return;
+        }
+        
+        const userSuggestions = document.getElementById('optimizeNovelInput').value.trim() || null;
+        
+        setButtonLoading('regenerateNovelBtn2', true, '重新生成中...');
+        
+        try {
+            const data = {
+                Boolean: false,
+                user_suggestions: userSuggestions
+            };
+            
+            const result = await callAPI(thirdWaithook, data);
+            
+            // 添加小说正文API返回数据日志
+            console.log('重新生成小说正文API完整返回结果:', result);
+            console.log('重新生成小说正文result类型:', typeof result);
+            
+            // 处理返回的数据结构
+            console.log('重新生成小说正文API返回的完整对象:', result);
+            
+            if (typeof result === 'object') {
+                // 检查并存储third_waithook（如果有的话）
+                if (result.third_waithook) {
+                    thirdWaithook = result.third_waithook.replace(/[`\s]/g, '');
+                    console.log('重新存储的third_waithook:', thirdWaithook);
+                }
+                
+                // 处理小说正文内容 - 根据实际返回的数据结构
+                if (result.novel_text) {
+                    generateNovelDisplay(result.novel_text);
+                } else {
+                    console.error('重新生成小说正文API返回数据格式错误，完整数据:', result);
+                    throw new Error('API返回数据格式错误：未找到novel_text字段');
+                }
+            } else if (typeof result === 'string') {
+                generateNovelDisplay(result);
+            } else {
+                console.error('重新生成小说正文API返回数据格式错误，完整数据:', result);
+                throw new Error('API返回数据格式错误');
+            }
+            
+            document.getElementById('novelSection').classList.remove('hidden');
+            
+            // 更新流程状态：小说正文已重新生成
+            workflowState.novelGenerated = true;
+            updateButtonStates();
+            
+            window.scrollTo({
+                top: document.getElementById('novelSection').offsetTop - 20,
+                behavior: 'smooth'
+            });
+        } catch (error) {
+            showError('重新生成小说正文失败: ' + error.message);
+        } finally {
+            setButtonLoading('regenerateNovelBtn2', false);
         }
     });
 
