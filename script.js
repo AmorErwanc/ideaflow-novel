@@ -358,11 +358,11 @@ document.addEventListener('DOMContentLoaded', function() {
         
         try {
             const data = {
-                genre: "empty",
+                genre: null,
                 plot_holes_count: 10
             };
             
-            const result = await callAPI('https://n8n.games/webhook/f6021675-4090-4734-b65d-c7ea7ba1b24a', data);
+            const result = await callAPI('https://n8n.games/webhook-test/f6021675-4090-4734-b65d-c7ea7ba1b24a', data);
             
             // 添加详细的API返回数据日志
             console.log('快速生成脑洞API完整返回结果:', result);
@@ -429,7 +429,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 plot_holes_count: plotHolesCount
             };
             
-            const result = await callAPI('https://n8n.games/webhook/f6021675-4090-4734-b65d-c7ea7ba1b24a', data);
+            const result = await callAPI('https://n8n.games/webhook-test/f6021675-4090-4734-b65d-c7ea7ba1b24a', data);
             
             // 添加详细的API返回数据日志
             console.log('生成脑洞API完整返回结果:', result);
@@ -490,7 +490,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        const userSuggestions = document.getElementById('optimizeIdeasInput').value.trim() || '';
+        const userSuggestions = document.getElementById('optimizeIdeasInput').value.trim() || null;
         
         setButtonLoading('generateOutlineBtn', true, '生成中...');
         
@@ -565,7 +565,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        const userSuggestions = document.getElementById('optimizeNovelInput').value.trim() || '';
+        const userSuggestions = document.getElementById('optimizeNovelInput').value.trim() || null;
         
         setButtonLoading('generateScriptBtn', true, '生成中...');
         
@@ -614,13 +614,13 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        const userSuggestions = document.getElementById('optimizeIdeasInput').value.trim() || 'empty';
+        const userSuggestions = document.getElementById('optimizeIdeasInput').value.trim() || null;
         
         setButtonLoading('regenerateIdeasBtn', true, '重新生成中...');
         
         try {
             const data = {
-                choose: selectedIdeaNumber || 'empty',
+                choose: selectedIdeaNumber || null,
                 Boolean: false,
                 user_suggestions: userSuggestions
             };
@@ -683,7 +683,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        const userSuggestions = document.getElementById('optimizeOutlineInput').value.trim() || 'empty';
+        const userSuggestions = document.getElementById('optimizeOutlineInput').value.trim() || null;
         
         setButtonLoading('regenerateOutlineBtn', true, '重新生成中...');
         
@@ -804,7 +804,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        const userSuggestions = document.getElementById('optimizeOutlineInput').value.trim() || '';
+        const userSuggestions = document.getElementById('optimizeOutlineInput').value.trim() || null;
         
         setButtonLoading('generateNovelBtn', true, '生成中...');
         
@@ -868,7 +868,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        const userSuggestions = document.getElementById('optimizeNovelInput').value.trim() || 'empty';
+        const userSuggestions = document.getElementById('optimizeNovelInput').value.trim() || null;
         
         setButtonLoading('regenerateNovelBtn', true, '重新生成中...');
         
