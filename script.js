@@ -104,6 +104,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 清空所有显示区域
         const ideasContainer = document.getElementById('ideasContainer');
+        const ideasSection = document.getElementById('ideasSection');
         const outlineSection = document.getElementById('outlineSection');
         const novelSection = document.getElementById('novelSection');
         const scriptSection = document.getElementById('scriptSection');
@@ -117,6 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (scriptContent) scriptContent.innerHTML = '';
         
         // 隐藏所有结果区域
+        if (ideasSection) ideasSection.classList.add('hidden');
         if (outlineSection) outlineSection.classList.add('hidden');
         if (novelSection) novelSection.classList.add('hidden');
         if (scriptSection) scriptSection.classList.add('hidden');
@@ -139,14 +141,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 检查按钮是否应该被永久禁用
     function shouldButtonBeDisabled(buttonId) {
-        // 快速生成和生成脑洞按钮永远不被禁用，作为重置功能
-        if (['quickGenerateBtn', 'generateIdeasBtn'].includes(buttonId)) {
+        // 快速生成、生成脑洞按钮和Tab按钮永远不被禁用
+        if (['quickGenerateBtn', 'generateIdeasBtn', 'quickGenTab', 'customTab'].includes(buttonId)) {
             return false;
-        }
-        
-        // Tab按钮在任何流程进行中都禁用
-        if (['quickGenTab', 'customTab'].includes(buttonId)) {
-            return workflowState.ideasGenerated || workflowState.outlineGenerated || workflowState.scriptGenerated || workflowState.novelGenerated;
         }
         
         if (workflowState.scriptGenerated) {
