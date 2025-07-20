@@ -85,8 +85,65 @@ document.addEventListener('DOMContentLoaded', function() {
         alert('错误: ' + message);
     }
 
+    // 工作流重置功能
+    function resetWorkflow() {
+        // 重置工作流状态
+        workflowState = {
+            ideasGenerated: false,
+            outlineGenerated: false,
+            novelGenerated: false,
+            scriptGenerated: false
+        };
+        
+        // 重置全局变量
+        firstWaithook = '';
+        secondWaithook = '';
+        thirdWaithook = '';
+        selectedIdeaNumber = null;
+        currentIdeas = [];
+        
+        // 清空所有显示区域
+        const ideasContainer = document.getElementById('ideasContainer');
+        const outlineSection = document.getElementById('outlineSection');
+        const novelSection = document.getElementById('novelSection');
+        const scriptSection = document.getElementById('scriptSection');
+        const outlineContent = document.getElementById('outlineContent');
+        const novelContent = document.getElementById('novelContent');
+        const scriptContent = document.getElementById('scriptContent');
+        
+        if (ideasContainer) ideasContainer.innerHTML = '';
+        if (outlineContent) outlineContent.innerHTML = '';
+        if (novelContent) novelContent.innerHTML = '';
+        if (scriptContent) scriptContent.innerHTML = '';
+        
+        // 隐藏所有结果区域
+        if (outlineSection) outlineSection.classList.add('hidden');
+        if (novelSection) novelSection.classList.add('hidden');
+        if (scriptSection) scriptSection.classList.add('hidden');
+        
+        // 重置输入框
+        const novelPrompt = document.getElementById('novelPrompt');
+        const optimizeIdeasInput = document.getElementById('optimizeIdeasInput');
+        const optimizeOutlineInput = document.getElementById('optimizeOutlineInput');
+        const optimizeNovelInput = document.getElementById('optimizeNovelInput');
+        
+        if (optimizeIdeasInput) optimizeIdeasInput.value = '';
+        if (optimizeOutlineInput) optimizeOutlineInput.value = '';
+        if (optimizeNovelInput) optimizeNovelInput.value = '';
+        
+        // 重置按钮状态
+        updateButtonStates();
+        
+        console.log('工作流已重置');
+    }
+
     // 检查按钮是否应该被永久禁用
     function shouldButtonBeDisabled(buttonId) {
+        // 快速生成和生成脑洞按钮永远不被禁用，作为重置功能
+        if (['quickGenerateBtn', 'generateIdeasBtn'].includes(buttonId)) {
+            return false;
+        }
+        
         // Tab按钮在任何流程进行中都禁用
         if (['quickGenTab', 'customTab'].includes(buttonId)) {
             return workflowState.ideasGenerated || workflowState.outlineGenerated || workflowState.scriptGenerated || workflowState.novelGenerated;
@@ -101,23 +158,52 @@ document.addEventListener('DOMContentLoaded', function() {
             return !['downloadNovelBtn', 'regenerateNovelBtn', 'regenerateNovelBtn2', 'generateScriptBtn'].includes(buttonId);
         }
         if (workflowState.outlineGenerated) {
-            // 大纲生成完成，禁用脑洞相关按钮
-            return ['quickGenerateBtn', 'generateIdeasBtn', 'regenerateIdeasBtn', 'generateOutlineBtn'].includes(buttonId);
+            // 大纲生成完成，禁用脑洞相关按钮（除了快速生成和生成脑洞）
+            return ['regenerateIdeasBtn', 'generateOutlineBtn'].includes(buttonId);
         }
         if (workflowState.ideasGenerated) {
-            // 脑洞生成完成，禁用生成脑洞的按钮
-            return ['quickGenerateBtn', 'generateIdeasBtn'].includes(buttonId);
+            // 脑洞生成完成，不再禁用生成脑洞的按钮（已在上面处理）
+            return false;
         }
         return false;
     }
 
-    // 统一的loading状态管理
-    function setButtonLoading(buttonId, isLoading, loadingText = '生成中...') {
+    // 增强的按钮状态管理类型
+    const ButtonStateType = {
+        NORMAL: 'normal',
+        LOADING: 'loading',
+        WORKFLOW_DISABLED: 'workflow-disabled',
+        PERMANENTLY_DISABLED: 'permanently-disabled'
+    };
+
+    // 按钮原始文本映射
+    const buttonTextMap = {
+        'quickGenerateBtn': '快速生成',
+        'generateIdeasBtn': '生成脑洞',
+        'regenerateIdeasBtn': '<i class="fas fa-sync-alt mr-2"></i>重新生成',
+        'generateOutlineBtn': '<i class="fas fa-list-ul mr-2"></i>生成大纲',
+        'regenerateOutlineBtn': '<i class="fas fa-sync-alt mr-2"></i>重新生成',
+        'generateScriptBtn': '<i class="fas fa-comments mr-2"></i>生成互动脚本',
+        'downloadScriptBtn': '<i class="fas fa-download mr-2"></i>下载',
+        'generateNovelBtn': '<i class="fas fa-book mr-2"></i>生成小说正文',
+        'regenerateNovelBtn': '<i class="fas fa-sync-alt mr-2"></i>重新生成',
+        'regenerateNovelBtn2': '<i class="fas fa-sync-alt mr-2"></i>重新生成',
+        'downloadNovelBtn': '<i class="fas fa-download mr-2"></i>下载'
+    };
+
+    // 统一的按钮状态管理函数
+    function setButtonState(buttonId, state, options = {}) {
         const button = document.getElementById(buttonId);
+        if (!button) return;
+        
         const btnText = button.querySelector('.btn-text');
         const spinner = button.querySelector('.loading-spinner');
+        const { loadingText = '生成中...', disabledReason = '' } = options;
         
-        // 定义全局按钮组 - 全局禁用策略
+        // 清除所有状态类
+        button.classList.remove('btn-loading', 'workflow-disabled');
+        
+        // 定义按钮组关系
         const allOperationButtons = ['quickGenerateBtn', 'generateIdeasBtn', 'regenerateIdeasBtn', 'generateOutlineBtn', 'regenerateOutlineBtn', 'generateScriptBtn', 'generateNovelBtn', 'regenerateNovelBtn', 'regenerateNovelBtn2'];
         const allTabButtons = ['quickGenTab', 'customTab'];
         
@@ -131,76 +217,143 @@ document.addEventListener('DOMContentLoaded', function() {
             'generateNovelBtn': allOperationButtons.filter(id => id !== 'generateNovelBtn').concat(allTabButtons),
             'regenerateNovelBtn': allOperationButtons.filter(id => id !== 'regenerateNovelBtn' && id !== 'regenerateNovelBtn2' && id !== 'downloadNovelBtn').concat(allTabButtons),
             'regenerateNovelBtn2': allOperationButtons.filter(id => id !== 'regenerateNovelBtn' && id !== 'regenerateNovelBtn2' && id !== 'downloadNovelBtn').concat(allTabButtons),
-            'downloadScriptBtn': [], // 下载按钮独立，不被其他操作影响
-            'downloadNovelBtn': [] // 下载按钮独立，不被其他操作影响
+            'downloadScriptBtn': [],
+            'downloadNovelBtn': []
         };
         
-        if (isLoading) {
-            button.disabled = true;
-            button.classList.add('btn-loading');
-            btnText.textContent = loadingText;
-            spinner.classList.remove('hidden');
-            
-            // 禁用相关按钮
-            const relatedButtons = buttonGroups[buttonId] || [];
-            relatedButtons.forEach(relatedButtonId => {
-                const relatedButton = document.getElementById(relatedButtonId);
-                if (relatedButton) {
-                    relatedButton.disabled = true;
+        switch (state) {
+            case ButtonStateType.LOADING:
+                button.disabled = true;
+                button.classList.add('btn-loading');
+                if (btnText) btnText.textContent = loadingText;
+                if (spinner) spinner.classList.remove('hidden');
+                
+                // 设置相关按钮为工作流禁用状态
+                const relatedButtons = buttonGroups[buttonId] || [];
+                relatedButtons.forEach(relatedButtonId => {
+                    const relatedButton = document.getElementById(relatedButtonId);
+                    if (relatedButton) {
+                        relatedButton.disabled = true;
+                        relatedButton.classList.add('workflow-disabled');
+                    }
+                });
+                break;
+                
+            case ButtonStateType.WORKFLOW_DISABLED:
+                button.disabled = true;
+                button.classList.add('workflow-disabled');
+                if (spinner) spinner.classList.add('hidden');
+                if (disabledReason) {
+                    button.title = disabledReason;
                 }
-            });
-        } else {
-            // 检查当前按钮是否应该被永久禁用
-            if (!shouldButtonBeDisabled(buttonId)) {
-                button.disabled = false;
-            }
-            button.classList.remove('btn-loading');
-            spinner.classList.add('hidden');
-            
-            // 启用相关按钮前先检查是否应该永久禁用
-            const relatedButtons = buttonGroups[buttonId] || [];
-            relatedButtons.forEach(relatedButtonId => {
-                const relatedButton = document.getElementById(relatedButtonId);
-                if (relatedButton && !shouldButtonBeDisabled(relatedButtonId)) {
-                    relatedButton.disabled = false;
+                break;
+                
+            case ButtonStateType.PERMANENTLY_DISABLED:
+                button.disabled = true;
+                if (spinner) spinner.classList.add('hidden');
+                if (disabledReason) {
+                    button.title = disabledReason;
                 }
-            });
-            
-            // 恢复原始文本
-            if (buttonId === 'generateIdeasBtn') {
-                btnText.textContent = '生成脑洞';
-            } else if (buttonId === 'regenerateIdeasBtn') {
-                btnText.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>重新生成';
-            } else if (buttonId === 'generateOutlineBtn') {
-                btnText.innerHTML = '<i class="fas fa-list-ul mr-2"></i>生成大纲';
-            } else if (buttonId === 'regenerateOutlineBtn') {
-                btnText.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>重新生成';
-            } else if (buttonId === 'generateScriptBtn') {
-                btnText.innerHTML = '<i class="fas fa-comments mr-2"></i>生成互动脚本';
-            } else if (buttonId === 'downloadScriptBtn') {
-                btnText.innerHTML = '<i class="fas fa-download mr-2"></i>下载';
-            } else if (buttonId === 'generateNovelBtn') {
-                btnText.innerHTML = '<i class="fas fa-book mr-2"></i>生成小说正文';
-            } else if (buttonId === 'regenerateNovelBtn' || buttonId === 'regenerateNovelBtn2') {
-                btnText.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>重新生成';
-            } else if (buttonId === 'downloadNovelBtn') {
-                btnText.innerHTML = '<i class="fas fa-download mr-2"></i>下载';
-            }
+                break;
+                
+            case ButtonStateType.NORMAL:
+                if (!shouldButtonBeDisabled(buttonId)) {
+                    button.disabled = false;
+                    button.title = '';
+                }
+                if (spinner) spinner.classList.add('hidden');
+                
+                // 恢复原始文本
+                if (btnText && buttonTextMap[buttonId]) {
+                    btnText.innerHTML = buttonTextMap[buttonId];
+                }
+                
+                // 恢复相关按钮状态
+                if (buttonGroups[buttonId]) {
+                    buttonGroups[buttonId].forEach(relatedButtonId => {
+                        const relatedButton = document.getElementById(relatedButtonId);
+                        if (relatedButton && !shouldButtonBeDisabled(relatedButtonId)) {
+                            relatedButton.disabled = false;
+                            relatedButton.classList.remove('workflow-disabled');
+                            relatedButton.title = '';
+                        }
+                    });
+                }
+                break;
         }
     }
 
-    // 流程状态按钮管理函数
+    // 兼容旧函数名
+    function setButtonLoading(buttonId, isLoading, loadingText = '生成中...') {
+        if (isLoading) {
+            setButtonState(buttonId, ButtonStateType.LOADING, { loadingText });
+        } else {
+            setButtonState(buttonId, ButtonStateType.NORMAL);
+        }
+    }
+
+    // 增强的流程状态按钮管理函数
     function updateButtonStates() {
         // 获取所有需要管理的按钮
         const allButtons = ['quickGenerateBtn', 'generateIdeasBtn', 'regenerateIdeasBtn', 'generateOutlineBtn', 'regenerateOutlineBtn', 'generateScriptBtn', 'generateNovelBtn', 'regenerateNovelBtn', 'regenerateNovelBtn2', 'quickGenTab', 'customTab'];
         
-        // 根据流程状态设置按钮禁用状态
+        // 根据流程状态设置按钮状态
         allButtons.forEach(buttonId => {
             const button = document.getElementById(buttonId);
-            if (button) {
-                button.disabled = shouldButtonBeDisabled(buttonId);
+            if (button && !button.classList.contains('btn-loading')) {
+                if (shouldButtonBeDisabled(buttonId)) {
+                    // 根据工作流状态决定禁用类型
+                    const reason = getDisabledReason(buttonId);
+                    if (reason.isPermanent) {
+                        setButtonState(buttonId, ButtonStateType.PERMANENTLY_DISABLED, { disabledReason: reason.message });
+                    } else {
+                        setButtonState(buttonId, ButtonStateType.WORKFLOW_DISABLED, { disabledReason: reason.message });
+                    }
+                } else {
+                    setButtonState(buttonId, ButtonStateType.NORMAL);
+                }
             }
         });
+    }
+
+    // 获取按钮禁用原因
+    function getDisabledReason(buttonId) {
+        // Tab按钮在任何流程进行中都禁用
+        if (['quickGenTab', 'customTab'].includes(buttonId)) {
+            if (workflowState.ideasGenerated || workflowState.outlineGenerated || workflowState.scriptGenerated || workflowState.novelGenerated) {
+                return { isPermanent: false, message: '工作流进行中，无法切换模式' };
+            }
+        }
+        
+        if (workflowState.scriptGenerated) {
+            if (!['downloadScriptBtn', 'downloadNovelBtn'].includes(buttonId)) {
+                return { isPermanent: true, message: '脚本已生成，流程已完成' };
+            }
+        }
+        
+        if (workflowState.novelGenerated) {
+            if (!['downloadNovelBtn', 'generateScriptBtn', 'regenerateNovelBtn', 'regenerateNovelBtn2'].includes(buttonId)) {
+                return { isPermanent: true, message: '小说已生成，请继续下一步或重新生成' };
+            }
+        }
+        
+        if (workflowState.outlineGenerated) {
+            if (['quickGenerateBtn', 'generateIdeasBtn', 'regenerateIdeasBtn'].includes(buttonId)) {
+                return { isPermanent: true, message: '大纲已生成，无法修改脑洞' };
+            }
+        }
+        
+        if (workflowState.ideasGenerated) {
+            if (buttonId === 'quickGenerateBtn' || buttonId === 'generateIdeasBtn') {
+                return { isPermanent: true, message: '脑洞已生成，请选择脑洞继续或重新生成' };
+            }
+            if (['generateOutlineBtn', 'regenerateOutlineBtn'].includes(buttonId) && !selectedIdeaNumber) {
+                return { isPermanent: false, message: '请先选择一个脑洞' };
+            }
+        }
+        
+        // 没有被禁用
+        return { isPermanent: false, message: '' };
     }
 
     // 生成脑洞卡片
@@ -355,6 +508,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 快速生成按钮
     document.getElementById('quickGenerateBtn').addEventListener('click', async function() {
+        // 检查是否有现有进度，需要重置
+        const hasProgress = workflowState.ideasGenerated || workflowState.outlineGenerated || 
+                           workflowState.novelGenerated || workflowState.scriptGenerated;
+        
+        if (hasProgress) {
+            const confirmReset = confirm('检测到已有进度，重新快速生成将清空所有内容，是否继续？\n\n点击"确定"重新开始，点击"取消"保持当前进度。');
+            if (!confirmReset) {
+                return; // 用户取消操作
+            }
+            // 重置工作流
+            resetWorkflow();
+        }
+        
         setButtonLoading('quickGenerateBtn', true, '随机生成中...');
         
         try {
@@ -420,6 +586,19 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!novelPrompt) {
             showError('请输入小说需求');
             return;
+        }
+        
+        // 检查是否有现有进度，需要重置
+        const hasProgress = workflowState.ideasGenerated || workflowState.outlineGenerated || 
+                           workflowState.novelGenerated || workflowState.scriptGenerated;
+        
+        if (hasProgress) {
+            const confirmReset = confirm('检测到已有进度，重新生成脑洞将清空所有内容，是否继续？\n\n点击"确定"重新开始，点击"取消"保持当前进度。');
+            if (!confirmReset) {
+                return; // 用户取消操作
+            }
+            // 重置工作流
+            resetWorkflow();
         }
         
         setButtonLoading('generateIdeasBtn', true, '生成中...');
