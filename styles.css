@@ -203,8 +203,8 @@ button:disabled:not(.btn-primary):hover {
 .loading-spinner {
     width: 24px;
     height: 24px;
-    border: 3px solid rgba(22, 93, 255, 0.2);
-    border-top-color: #165DFF;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -270,6 +270,10 @@ button:disabled:not(.btn-primary):hover {
     border: none;
     cursor: pointer;
     outline: none;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    padding: 8px 16px;
+    margin: 0 4px;
 }
 
 .tab-button.active {
@@ -280,6 +284,22 @@ button:disabled:not(.btn-primary):hover {
 .tab-button:not(.active):hover {
     color: #374151;
     border-bottom-color: #d1d5db;
+}
+
+/* Tab按钮禁用状态 */
+.tab-button:disabled {
+    background-color: #f3f4f6;
+    color: #9ca3af;
+    cursor: not-allowed;
+    border-radius: 8px;
+    opacity: 0.7;
+    border-bottom-color: transparent;
+}
+
+.tab-button:disabled:hover {
+    background-color: #f3f4f6;
+    color: #9ca3af;
+    border-bottom-color: transparent;
 }
 
 .tab-content {
