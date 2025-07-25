@@ -10,7 +10,11 @@
 
 这是一个静态Web应用程序，无需构建过程。开发很简单：
 
-- **本地开发**: 直接在浏览器中打开 `index.html` 或通过 `python3 -m http.server 8000` 提供服务
+- **本地开发**: 
+  - 方法1: 直接在浏览器中打开 `index.html`
+  - 方法2: 使用Python服务器: `python3 -m http.server 8000`
+  - 方法3: 使用VS Code Live Server扩展
+- **调试**: 使用浏览器开发者工具 (F12)，查看Console和Network面板监控API调用
 - **测试**: 无自动化测试 - 通过运行完整工作流来测试功能
 - **部署**: 静态文件可部署到任何Web服务器或GitHub Pages
 
@@ -83,7 +87,9 @@ workflowState = {
 - `index.html`: 完整的UI结构，包含所有工作流区域
 - `script.js`: 核心应用逻辑、API处理和状态管理
 - `styles.css`: 补充Tailwind CSS的自定义样式
-- 外部依赖: Tailwind CSS (CDN), Font Awesome (CDN)
+- 外部依赖: 
+  - Tailwind CSS v3.3.3 (CDN)
+  - Font Awesome v6.7.2 (CDN)
 
 ## 重要实现注意事项
 
@@ -101,3 +107,22 @@ workflowState = {
 - 响应可能包含需要 `JSON.parse()` 的JSON字符串
 - 脚本生成返回纯文本（无需JSON解析）
 - 全面记录用于调试API响应格式
+
+## 常见开发任务
+
+### 添加新功能
+1. 在 `workflowState` 中添加新状态标志
+2. 在 `script.js` 中实现API调用函数
+3. 在 `index.html` 中添加UI组件
+4. 更新 `updateButtonStates()` 处理新的按钮逻辑
+
+### 调试工作流
+1. 检查浏览器Console中的API响应日志
+2. 验证 `firstWaithook`, `secondWaithook`, `thirdWaithook` 值
+3. 监控 `workflowState` 对象状态变化
+4. 使用 `console.log('当前状态:', workflowState)` 跟踪流程
+
+### 修改样式
+1. 优先使用Tailwind CSS类
+2. 自定义样式写入 `styles.css`
+3. 动画效果已在CSS中定义: `fadeIn`, `slideInLeft`等
