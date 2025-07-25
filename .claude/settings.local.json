@@ -14,7 +14,9 @@
       "mcp__n8n-mcp__n8n_get_execution",
       "mcp__n8n-mcp__n8n_validate_workflow",
       "Bash(mkdir:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "mcp__zen__codereview",
+      "Bash(ls:*)"
     ],
     "deny": []
   }
