@@ -22,6 +22,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const quickGenContent = document.getElementById('quickGenContent');
     const customContent = document.getElementById('customContent');
     
+    // 记录初始加载
+    logger.info('Application loaded', {
+        userAgent: navigator.userAgent,
+        timestamp: new Date().toISOString()
+    });
+    
     function switchTab(activeTab, activeContent, inactiveTab, inactiveContent) {
         // 更新tab按钮状态
         activeTab.classList.add('active');
@@ -39,10 +45,12 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     quickGenTab.addEventListener('click', function() {
+        logger.trackUserAction('Tab switched', { tab: 'quickGen' });
         switchTab(quickGenTab, quickGenContent, customTab, customContent);
     });
     
     customTab.addEventListener('click', function() {
+        logger.trackUserAction('Tab switched', { tab: 'custom' });
         switchTab(customTab, customContent, quickGenTab, quickGenContent);
     });
     
@@ -51,11 +59,17 @@ document.addEventListener('DOMContentLoaded', function() {
     const ideaCountValue = document.getElementById('ideaCountValue');
     ideaCountSlider.addEventListener('input', function() {
         ideaCountValue.textContent = this.value;
+        logger.trackUserAction('Idea count changed', { count: this.value });
     });
 
-    // API调用函数
+    // API调用函数（集成监控）
     async function callAPI(url, data) {
+        const startTime = Date.now();
+        const timerId = logger.startTimer(`API_${url.split('/').pop()}`);
+        
         try {
+            logger.info(`API Call started: ${url}`, { data });
+            
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
@@ -64,29 +78,50 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify(data)
             });
             
+            const responseTime = Date.now() - startTime;
+            
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const error = new Error(`HTTP error! status: ${response.status}`);
+                logger.trackAPICall(url, false, responseTime, { 
+                    status: response.status,
+                    error: error.message 
+                });
+                throw error;
             }
             
             const result = await response.text();
+            let parsedResult;
+            
             try {
-                return JSON.parse(result);
+                parsedResult = JSON.parse(result);
             } catch {
-                return result; // 返回纯文本（用于第三个API）
+                parsedResult = result; // 返回纯文本（用于第三个API）
             }
+            
+            logger.trackAPICall(url, true, responseTime, { 
+                status: response.status,
+                resultType: typeof parsedResult 
+            });
+            logger.endTimer(timerId);
+            
+            return parsedResult;
         } catch (error) {
-            console.error('API调用失败:', error);
+            const responseTime = Date.now() - startTime;
+            logger.trackAPICall(url, false, responseTime, { error: error.message });
+            logger.error('API调用失败', { url, error: error.message, data });
             throw error;
         }
     }
 
-    // 显示错误信息
+    // 显示错误信息（集成日志）
     function showError(message) {
+        logger.error('User error shown', { message });
         alert('错误: ' + message);
     }
 
     // 工作流重置功能
     function resetWorkflow() {
+        logger.info('Workflow reset initiated');
         // 重置工作流状态
         workflowState = {
             ideasGenerated: false,
