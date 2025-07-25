@@ -1148,8 +1148,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // 重新生成小说正文按钮
-    document.getElementById('regenerateNovelBtn').addEventListener('click', async function() {
+    // 重新生成小说正文的共享处理函数
+    async function handleRegenerateNovel(buttonId) {
         if (!thirdWaithook) {
             showError('请先生成小说正文');
             return;
@@ -1157,7 +1157,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const userSuggestions = document.getElementById('optimizeNovelInput').value.trim() || null;
         
-        setButtonLoading('regenerateNovelBtn', true, '重新生成中...');
+        setButtonLoading(buttonId, true, '重新生成中...');
         
         try {
             const data = {
@@ -1208,72 +1208,18 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             showError('重新生成小说正文失败: ' + error.message);
         } finally {
-            setButtonLoading('regenerateNovelBtn', false);
+            setButtonLoading(buttonId, false);
         }
+    }
+    
+    // 重新生成小说正文按钮1（顶部）
+    document.getElementById('regenerateNovelBtn').addEventListener('click', function() {
+        handleRegenerateNovel('regenerateNovelBtn');
     });
 
     // 重新生成小说正文按钮2（底部按钮）
-    document.getElementById('regenerateNovelBtn2').addEventListener('click', async function() {
-        if (!thirdWaithook) {
-            showError('请先生成小说正文');
-            return;
-        }
-        
-        const userSuggestions = document.getElementById('optimizeNovelInput').value.trim() || null;
-        
-        setButtonLoading('regenerateNovelBtn2', true, '重新生成中...');
-        
-        try {
-            const data = {
-                Boolean: false,
-                user_suggestions: userSuggestions
-            };
-            
-            const result = await callAPI(thirdWaithook, data);
-            
-            // 添加小说正文API返回数据日志
-            console.log('重新生成小说正文API完整返回结果:', result);
-            console.log('重新生成小说正文result类型:', typeof result);
-            
-            // 处理返回的数据结构
-            console.log('重新生成小说正文API返回的完整对象:', result);
-            
-            if (typeof result === 'object') {
-                // 检查并存储third_waithook（如果有的话）
-                if (result.third_waithook) {
-                    thirdWaithook = result.third_waithook.replace(/[`\s]/g, '');
-                    console.log('重新存储的third_waithook:', thirdWaithook);
-                }
-                
-                // 处理小说正文内容 - 根据实际返回的数据结构
-                if (result.novel_text) {
-                    generateNovelDisplay(result.novel_text);
-                } else {
-                    console.error('重新生成小说正文API返回数据格式错误，完整数据:', result);
-                    throw new Error('API返回数据格式错误：未找到novel_text字段');
-                }
-            } else if (typeof result === 'string') {
-                generateNovelDisplay(result);
-            } else {
-                console.error('重新生成小说正文API返回数据格式错误，完整数据:', result);
-                throw new Error('API返回数据格式错误');
-            }
-            
-            document.getElementById('novelSection').classList.remove('hidden');
-            
-            // 更新流程状态：小说正文已重新生成
-            workflowState.novelGenerated = true;
-            updateButtonStates();
-            
-            window.scrollTo({
-                top: document.getElementById('novelSection').offsetTop - 20,
-                behavior: 'smooth'
-            });
-        } catch (error) {
-            showError('重新生成小说正文失败: ' + error.message);
-        } finally {
-            setButtonLoading('regenerateNovelBtn2', false);
-        }
+    document.getElementById('regenerateNovelBtn2').addEventListener('click', function() {
+        handleRegenerateNovel('regenerateNovelBtn2');
     });
 
     // 下载小说正文功能
