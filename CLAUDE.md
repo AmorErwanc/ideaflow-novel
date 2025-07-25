@@ -56,7 +56,7 @@ workflowState = {
 ## 关键API集成
 
 ### 主要端点
-`https://n8n.games/webhook/f6021675-4090-4734-b65d-c7ea7ba1b24a` - 用于初始脑洞生成（快速和自定义模式）
+`https://n8n.games/webhook/bd608722-b6fc-46b7-92b8-bf72d4c991af` - 用于初始脑洞生成（快速和自定义模式）
 
 ### 数据处理模式
 - **灵活响应解析**: 处理数组 `result[0]` 和直接对象格式
