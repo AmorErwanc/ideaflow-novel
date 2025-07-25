@@ -437,6 +437,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     this.querySelector('.selection-indicator').classList.remove('selected');
                     selectedIdeaNumber = null;
                     
+                    // 保存取消选择的状态
+                    if (window.recoverySystem && workflowState.ideasGenerated) {
+                        window.recoverySystem.createCheckpoint('ideas', {
+                            ideas: currentIdeas,
+                            selectedIdeaNumber: null
+                        }, {
+                            first: firstWaithook
+                        });
+                    }
+                    
                     // 添加取消选中的动画效果
                     this.style.transform = 'scale(0.98)';
                     setTimeout(() => {
@@ -451,6 +461,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     this.classList.add('selected-card');
                     this.querySelector('.selection-indicator').classList.add('selected');
                     selectedIdeaNumber = this.dataset.ideaNumber;
+                    
+                    // 保存选择状态
+                    if (window.recoverySystem && workflowState.ideasGenerated) {
+                        window.recoverySystem.createCheckpoint('ideas', {
+                            ideas: currentIdeas,
+                            selectedIdeaNumber: selectedIdeaNumber
+                        }, {
+                            first: firstWaithook
+                        });
+                    }
                 }
             });
             
@@ -595,6 +615,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 workflowState.ideasGenerated = true;
                 updateButtonStates();
                 
+                // 保存检查点
+                if (window.recoverySystem) {
+                    window.recoverySystem.createCheckpoint('ideas', {
+                        ideas: dataObj.Novel_imagination,
+                        selectedIdeaNumber: selectedIdeaNumber
+                    }, {
+                        first: firstWaithook
+                    });
+                }
+                
                 window.scrollTo({
                     top: document.getElementById('ideasSection').offsetTop - 20,
                     behavior: 'smooth'
@@ -674,6 +704,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 // 更新流程状态：脑洞已生成
                 workflowState.ideasGenerated = true;
                 updateButtonStates();
+                
+                // 保存检查点
+                if (window.recoverySystem) {
+                    window.recoverySystem.createCheckpoint('ideas', {
+                        ideas: dataObj.Novel_imagination,
+                        selectedIdeaNumber: selectedIdeaNumber
+                    }, {
+                        first: firstWaithook
+                    });
+                }
                 
                 window.scrollTo({
                     top: document.getElementById('ideasSection').offsetTop - 20,
@@ -755,6 +795,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 workflowState.outlineGenerated = true;
                 updateButtonStates();
                 
+                // 保存检查点
+                if (window.recoverySystem) {
+                    window.recoverySystem.createCheckpoint('outline', {
+                        outline: outlineData,
+                        selectedIdeaNumber: selectedIdeaNumber
+                    }, {
+                        first: firstWaithook,
+                        second: secondWaithook
+                    });
+                }
+                
                 window.scrollTo({
                     top: document.getElementById('outlineSection').offsetTop - 20,
                     behavior: 'smooth'
@@ -807,6 +858,18 @@ document.addEventListener('DOMContentLoaded', function() {
             // 更新流程状态：脚本已生成
             workflowState.scriptGenerated = true;
             updateButtonStates();
+            
+            // 保存检查点
+            if (window.recoverySystem) {
+                window.recoverySystem.createCheckpoint('script', {
+                    script: result,
+                    selectedIdeaNumber: selectedIdeaNumber
+                }, {
+                    first: firstWaithook,
+                    second: secondWaithook,
+                    third: thirdWaithook
+                });
+            }
             
             window.scrollTo({
                 top: document.getElementById('scriptSection').offsetTop - 20,
@@ -1062,6 +1125,18 @@ document.addEventListener('DOMContentLoaded', function() {
             workflowState.novelGenerated = true;
             updateButtonStates();
             
+            // 保存检查点
+            if (window.recoverySystem) {
+                window.recoverySystem.createCheckpoint('novel', {
+                    novel: result.novel_text || result,
+                    selectedIdeaNumber: selectedIdeaNumber
+                }, {
+                    first: firstWaithook,
+                    second: secondWaithook,
+                    third: thirdWaithook
+                });
+            }
+            
             window.scrollTo({
                 top: document.getElementById('novelSection').offsetTop - 20,
                 behavior: 'smooth'
@@ -1253,6 +1328,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // 暴露函数到全局作用域，供恢复系统使用
+    window.generateIdeaCards = generateIdeaCards;
+    window.generateOutlineDisplay = generateOutlineDisplay;
+    window.generateNovelDisplay = generateNovelDisplay;
+    window.generateScriptDisplay = generateScriptDisplay;
+    window.workflowState = workflowState;
+    window.updateButtonStates = updateButtonStates;
+    window.firstWaithook = firstWaithook;
+    window.secondWaithook = secondWaithook;
+    window.thirdWaithook = thirdWaithook;
+    window.currentIdeas = currentIdeas;
+    window.selectedIdeaNumber = selectedIdeaNumber;
+    
     // 滚动动画
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {

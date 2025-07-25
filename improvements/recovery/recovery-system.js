@@ -108,10 +108,23 @@ class RecoverySystem {
         switch (type) {
             case 'ideas':
                 if (checkpoint.data && checkpoint.webhookData?.first) {
-                    window.firstWaithook = checkpoint.webhookData.first;
+                    // 恢复webhook
+                    if (window.firstWaithook !== undefined) {
+                        window.firstWaithook = checkpoint.webhookData.first;
+                    }
+                    // 恢复脑洞数据
                     displayIdeas(checkpoint.data);
-                    workflowState.ideasGenerated = true;
-                    updateButtonStates();
+                    // 恢复currentIdeas
+                    if (window.currentIdeas !== undefined) {
+                        window.currentIdeas = checkpoint.data.ideas;
+                    }
+                    // 更新状态
+                    if (window.workflowState) {
+                        window.workflowState.ideasGenerated = true;
+                    }
+                    if (window.updateButtonStates) {
+                        window.updateButtonStates();
+                    }
                     return true;
                 }
                 break;
@@ -123,10 +136,21 @@ class RecoverySystem {
                 }
                 
                 if (checkpoint.data && checkpoint.webhookData?.second) {
-                    window.secondWaithook = checkpoint.webhookData.second;
+                    // 恢复webhook
+                    if (window.secondWaithook !== undefined) {
+                        window.secondWaithook = checkpoint.webhookData.second;
+                    }
+                    // 恢复选中的脑洞编号
+                    if (window.selectedIdeaNumber !== undefined && checkpoint.data.selectedIdeaNumber) {
+                        window.selectedIdeaNumber = checkpoint.data.selectedIdeaNumber;
+                    }
                     displayOutline(checkpoint.data);
-                    workflowState.outlineGenerated = true;
-                    updateButtonStates();
+                    if (window.workflowState) {
+                        window.workflowState.outlineGenerated = true;
+                    }
+                    if (window.updateButtonStates) {
+                        window.updateButtonStates();
+                    }
                     return true;
                 }
                 break;
@@ -138,10 +162,17 @@ class RecoverySystem {
                 }
                 
                 if (checkpoint.data && checkpoint.webhookData?.third) {
-                    window.thirdWaithook = checkpoint.webhookData.third;
+                    // 恢复webhook
+                    if (window.thirdWaithook !== undefined) {
+                        window.thirdWaithook = checkpoint.webhookData.third;
+                    }
                     displayNovel(checkpoint.data);
-                    workflowState.novelGenerated = true;
-                    updateButtonStates();
+                    if (window.workflowState) {
+                        window.workflowState.novelGenerated = true;
+                    }
+                    if (window.updateButtonStates) {
+                        window.updateButtonStates();
+                    }
                     return true;
                 }
                 break;
@@ -154,8 +185,12 @@ class RecoverySystem {
                 
                 if (checkpoint.data) {
                     displayScript(checkpoint.data);
-                    workflowState.scriptGenerated = true;
-                    updateButtonStates();
+                    if (window.workflowState) {
+                        window.workflowState.scriptGenerated = true;
+                    }
+                    if (window.updateButtonStates) {
+                        window.updateButtonStates();
+                    }
                     return true;
                 }
                 break;
@@ -382,9 +417,55 @@ class RecoverySystem {
 // 创建全局实例
 window.recoverySystem = new RecoverySystem();
 
+// 适配函数 - 映射到script.js中的实际函数
+window.displayIdeas = function(data) {
+    if (data.ideas && window.generateIdeaCards) {
+        window.generateIdeaCards(data.ideas);
+        document.getElementById('ideasSection').classList.remove('hidden');
+        
+        // 恢复选中状态
+        if (data.selectedIdeaNumber) {
+            const card = document.querySelector(`[data-idea-number="${data.selectedIdeaNumber}"]`);
+            if (card) {
+                card.click();
+            }
+        }
+    }
+};
+
+window.displayOutline = function(data) {
+    if (data.outline && window.generateOutlineDisplay) {
+        window.generateOutlineDisplay(data.outline);
+        document.getElementById('outlineSection').classList.remove('hidden');
+    }
+};
+
+window.displayNovel = function(data) {
+    if (data.novel && window.generateNovelDisplay) {
+        window.generateNovelDisplay(data.novel);
+        document.getElementById('novelSection').classList.remove('hidden');
+    }
+};
+
+window.displayScript = function(data) {
+    if (data.script && window.generateScriptDisplay) {
+        window.generateScriptDisplay(data.script);
+        document.getElementById('scriptSection').classList.remove('hidden');
+    }
+};
+
 // 页面加载时检查是否需要恢复
 document.addEventListener('DOMContentLoaded', function() {
+    // 等待script.js加载完成
     setTimeout(() => {
-        recoverySystem.showRecoveryPrompt();
-    }, 1000);
+        // 确保script.js已经暴露了必要的函数
+        if (window.generateIdeaCards && window.workflowState) {
+            recoverySystem.showRecoveryPrompt();
+        } else {
+            // 如果还没准备好，再等一会儿
+            setTimeout(() => {
+                recoverySystem.showRecoveryPrompt();
+            }, 1000);
+        }
+    }, 500);
 });
