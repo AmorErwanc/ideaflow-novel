@@ -561,7 +561,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 plot_holes_count: 10
             };
             
-            const result = await callAPI('https://n8n.games/webhook/f6021675-4090-4734-b65d-c7ea7ba1b24a', data);
+            const result = await callAPI('https://n8n.games/webhook/bd608722-b6fc-46b7-92b8-bf72d4c991af', data);
             
             // 添加详细的API返回数据日志
             console.log('快速生成脑洞API完整返回结果:', result);
@@ -641,7 +641,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 plot_holes_count: plotHolesCount
             };
             
-            const result = await callAPI('https://n8n.games/webhook/f6021675-4090-4734-b65d-c7ea7ba1b24a', data);
+            const result = await callAPI('https://n8n.games/webhook/bd608722-b6fc-46b7-92b8-bf72d4c991af', data);
             
             // 添加详细的API返回数据日志
             console.log('生成脑洞API完整返回结果:', result);
