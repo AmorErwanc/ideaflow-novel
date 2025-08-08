@@ -38,7 +38,9 @@
       "Bash(open index.html)",
       "mcp__serena__replace_symbol_body",
       "mcp__serena__list_dir",
-      "Bash(open:*)"
+      "Bash(open:*)",
+      "Bash(# 删除空文件夹\nrmdir original 2>/dev/null || true\nrmdir ideaflow-novel 2>/dev/null || true\n\n# 移动剩余的测试文件到demo\nmv demo/*.md demo/README.md archive/ 2>/dev/null || true\n\n# 查看新的文件结构\nls -la)",
+      "Bash(# 把demo相关文件放回demo文件夹\nmv index.html demo/index.html\nmv src/css/main.css demo/styles.css\nmv src/js/app.js demo/demo.js\nmv src/components/multi-brain-v3.js demo/multi-brain-hole-v3.js\n\n# 删除创建的空文件夹\nrmdir src/css src/js src/components src\nrmdir assets/images assets\n\n# 查看demo文件夹内容\nls -la demo/)"
     ],
     "deny": []
   }
