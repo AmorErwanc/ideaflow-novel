@@ -25,7 +25,11 @@
       "Bash(git push:*)",
       "Bash(python3:*)",
       "Bash(chmod:*)",
-      "Bash(open streaming-test/stream-test-v4.html)"
+      "Bash(open streaming-test/stream-test-v4.html)",
+      "mcp__chrome-mcp-server__chrome_navigate",
+      "mcp__chrome-mcp-server__chrome_screenshot",
+      "mcp__chrome-mcp-server__chrome_get_web_content",
+      "mcp__chrome-mcp-server__chrome_get_interactive_elements"
     ],
     "deny": []
   }

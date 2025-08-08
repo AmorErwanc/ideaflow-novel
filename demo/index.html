@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI小说创作平台 - 全新设计</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- 极简顶部导航栏 -->
+    <nav class="navbar-flat">
+        <div class="nav-left">
+            <div class="nav-logo">
+                <i class="fas fa-feather-alt"></i>
+            </div>
+            <div class="nav-progress">
+                <div class="progress-bg" style="width: 25%;"></div>
+                <div class="progress-step active">脑洞</div>
+                <div class="progress-step">大纲</div>
+                <div class="progress-step">小说</div>
+                <div class="progress-step">剧本</div>
+            </div>
+        </div>
+        <div class="nav-right">
+            <button class="nav-icon-btn" title="我的作品">
+                <i class="fas fa-book"></i>
+            </button>
+            <button class="nav-icon-btn" title="历史记录">
+                <i class="fas fa-history"></i>
+            </button>
+            <button class="nav-icon-btn" title="设置">
+                <i class="fas fa-cog"></i>
+            </button>
+            <div class="nav-divider"></div>
+            <button class="nav-user-mini">
+                <img src="https://ui-avatars.com/api/?name=User&background=667eea&color=fff" alt="avatar">
+            </button>
+        </div>
+    </nav>
+
+
+    <!-- 主要内容区域 -->
+    <main class="main-container">
+        <!-- 左侧展示区 -->
+        <div class="display-area">
+            <!-- 瀑布流展示区 -->
+            <div class="waterfall-container">
+                <div class="waterfall-grid">
+                    <!-- 模拟创意卡片 -->
+                    <div class="idea-card" data-id="1">
+                        <div class="card-header">
+                            <span class="card-badge badge-scifi">科幻</span>
+                            <div class="card-actions">
+                                <button class="btn-edit" title="编辑">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <h3 class="card-title" contenteditable="false">时间旅行者的悖论</h3>
+                        <p class="card-content" contenteditable="false">
+                            在2157年，时间旅行已经成为现实。主人公发现自己陷入了一个时间循环，每次试图改变过去都会导致更糟糕的未来。他必须找到打破循环的方法，但代价可能是失去所爱的人...
+                        </p>
+                        <div class="card-footer">
+                            <button class="btn-select">
+                                <i class="fas fa-check"></i> 选择
+                            </button>
+                            <button class="btn-favorite">
+                                <i class="far fa-heart"></i>
+                            </button>
+                            <button class="btn-save" style="display: none;">
+                                <i class="fas fa-save"></i> 保存
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="idea-card" data-id="2">
+                        <div class="card-header">
+                            <span class="card-badge badge-mystery">悬疑</span>
+                            <div class="card-actions">
+                                <button class="btn-edit" title="编辑">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <h3 class="card-title" contenteditable="false">消失的第七个房间</h3>
+                        <p class="card-content" contenteditable="false">
+                            一座古老的旅馆，六个房间，七个客人。当第七个客人神秘失踪后，其他人发现这座旅馆的平面图上原本应该有第七个房间。每个人都声称从未见过这个房间，但所有的线索都指向它的存在...
+                        </p>
+                        <div class="card-footer">
+                            <button class="btn-select">
+                                <i class="fas fa-check"></i> 选择
+                            </button>
+                            <button class="btn-favorite">
+                                <i class="far fa-heart"></i>
+                            </button>
+                            <button class="btn-save" style="display: none;">
+                                <i class="fas fa-save"></i> 保存
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="idea-card" data-id="3">
+                        <div class="card-header">
+                            <span class="card-badge badge-romance">爱情</span>
+                            <div class="card-actions">
+                                <button class="btn-edit" title="编辑">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <h3 class="card-title" contenteditable="false">AI恋人</h3>
+                        <p class="card-content" contenteditable="false">
+                            她爱上了一个完美的男人，温柔、体贴、理解她的一切。直到有一天，她发现他是一个AI...
+                        </p>
+                        <div class="card-footer">
+                            <button class="btn-select">
+                                <i class="fas fa-check"></i> 选择
+                            </button>
+                            <button class="btn-favorite">
+                                <i class="far fa-heart"></i>
+                            </button>
+                            <button class="btn-save" style="display: none;">
+                                <i class="fas fa-save"></i> 保存
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="idea-card" data-id="4">
+                        <div class="card-header">
+                            <span class="card-badge badge-fantasy">奇幻</span>
+                            <div class="card-actions">
+                                <button class="btn-edit" title="编辑">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <h3 class="card-title" contenteditable="false">梦境编织者</h3>
+                        <p class="card-content" contenteditable="false">
+                            在一个梦境可以被编织和交易的世界里，最优秀的梦境编织者突然失去了做梦的能力。为了找回自己的天赋，她必须进入他人最深层的噩梦，面对被遗忘的恐惧...
+                        </p>
+                        <div class="card-footer">
+                            <button class="btn-select">
+                                <i class="fas fa-check"></i> 选择
+                            </button>
+                            <button class="btn-favorite">
+                                <i class="far fa-heart"></i>
+                            </button>
+                            <button class="btn-save" style="display: none;">
+                                <i class="fas fa-save"></i> 保存
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="idea-card" data-id="5">
+                        <div class="card-header">
+                            <span class="card-badge badge-thriller">惊悚</span>
+                            <div class="card-actions">
+                                <button class="btn-edit" title="编辑">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <h3 class="card-title" contenteditable="false">镜中世界</h3>
+                        <p class="card-content" contenteditable="false">
+                            每天早上照镜子时，他都会发现镜中的自己做着不同的动作。起初只是细微的差别，直到有一天，镜中的他开口说话了："我们需要交换位置..."
+                        </p>
+                        <div class="card-footer">
+                            <button class="btn-select">
+                                <i class="fas fa-check"></i> 选择
+                            </button>
+                            <button class="btn-favorite">
+                                <i class="far fa-heart"></i>
+                            </button>
+                            <button class="btn-save" style="display: none;">
+                                <i class="fas fa-save"></i> 保存
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 加载更多按钮 -->
+                <div class="load-more">
+                    <button class="btn-load-more">
+                        <i class="fas fa-plus-circle"></i> 加载更多创意
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧对话区 -->
+        <div class="chat-area">
+            <div class="chat-header">
+                <div class="assistant-info">
+                    <div class="assistant-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="assistant-details">
+                        <h3>AI创作助手</h3>
+                        <span class="status online">
+                            <i class="fas fa-circle"></i> 在线
+                        </span>
+                    </div>
+                </div>
+                <button class="btn-clear-chat">
+                    <i class="fas fa-broom"></i>
+                </button>
+            </div>
+
+            <div class="chat-messages">
+                <!-- 欢迎消息 -->
+                <div class="message assistant">
+                    <div class="message-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-content">
+                        <div class="message-bubble">
+                            嗨！我是你的AI创作助手 ✨<br>
+                            让我们一起创作精彩的故事吧！你想写什么类型的小说呢？
+                        </div>
+                        <span class="message-time">10:30</span>
+                    </div>
+                </div>
+
+                <!-- 用户消息示例 -->
+                <div class="message user">
+                    <div class="message-content">
+                        <div class="message-bubble">
+                            我想写一个关于未来世界的科幻小说
+                        </div>
+                        <span class="message-time">10:31</span>
+                    </div>
+                </div>
+
+                <!-- AI回复示例 -->
+                <div class="message assistant">
+                    <div class="message-avatar">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <div class="message-content">
+                        <div class="message-bubble">
+                            太棒了！科幻题材充满无限可能 🚀<br><br>
+                            我为你生成了5个独特的科幻创意，每个都有不同的角度和主题。你可以查看左侧的卡片，选择最吸引你的一个！
+                        </div>
+                        <span class="message-time">10:32</span>
+                    </div>
+                </div>
+
+                <!-- 正在输入提示 -->
+                <div class="typing-indicator">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+
+            <!-- 快速建议 -->
+            <div class="quick-suggestions">
+                <button class="suggestion-chip">
+                    <i class="fas fa-fire"></i> 热门：都市异能
+                </button>
+                <button class="suggestion-chip">
+                    <i class="fas fa-star"></i> 推荐：悬疑推理
+                </button>
+                <button class="suggestion-chip">
+                    <i class="fas fa-dice"></i> 随机生成
+                </button>
+            </div>
+
+            <!-- 输入区域 -->
+            <div class="chat-input">
+                <button class="btn-attachment">
+                    <i class="fas fa-paperclip"></i>
+                </button>
+                <input type="text" placeholder="输入你的想法..." class="input-message">
+                <button class="btn-voice">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <button class="btn-send">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- 移动端浮动按钮 -->
+    <button class="mobile-chat-toggle">
+        <i class="fas fa-comments"></i>
+    </button>
+
+    <script src="demo.js"></script>
+</body>
+</html>
