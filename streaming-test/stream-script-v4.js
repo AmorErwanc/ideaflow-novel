@@ -210,6 +210,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 story.contentStarted = true;
                 parserState.currentTag = 'c';
                 parserState.buffer = ''; // 清空buffer准备接收内容
+                
+                // 当内容开始时，移除标题的光标
+                removeTitleCursor(story.number);
             }
             return;
         }
@@ -313,6 +316,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     titleContent.textContent += char;
                 }, index * 15); // 15ms延迟
             })(i, newChars[i]);
+        }
+    }
+
+    // 移除标题光标
+    function removeTitleCursor(storyNum) {
+        const card = document.getElementById(`idea-card-${storyNum}`);
+        if (!card) return;
+        
+        const titleEl = card.querySelector('.idea-title');
+        if (!titleEl) return;
+        
+        const titleCursor = titleEl.querySelector('.typewriter-cursor');
+        if (titleCursor) {
+            titleCursor.remove();
+            console.log(`🔤 移除Story ${storyNum}标题光标`);
         }
     }
 

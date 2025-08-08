@@ -22,7 +22,10 @@
       "Bash(mkdir:*)",
       "Bash(mv:*)",
       "Bash(tree:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(python3:*)",
+      "Bash(chmod:*)",
+      "Bash(open streaming-test/stream-test-v4.html)"
     ],
     "deny": []
   }
