@@ -57,10 +57,10 @@
             /* 浮动触发按钮 */
             .multi-brain-trigger {
                 position: fixed;
-                bottom: 24px;
-                right: 24px;
-                width: 56px;
-                height: 56px;
+                bottom: 100px;  /* 进一步提高位置，完全避开输入框区域 */
+                right: 32px;  /* 稍微右移 */
+                width: 48px;  /* 减小尺寸 */
+                height: 48px;
                 background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                 border-radius: 50%;
                 display: flex;
@@ -69,7 +69,7 @@
                 cursor: pointer;
                 box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
                 transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                z-index: 99;
+                z-index: 999;  /* 提高z-index但不超过底部栏 */
                 border: none;
                 color: white;
                 font-size: 24px;
@@ -113,7 +113,6 @@
                 transform: translateY(100%);
                 transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
                 z-index: 1000;
-                display: none;
             }
 
             .multi-brain-bar.active {
@@ -513,6 +512,7 @@
     function createBottomBar() {
         const bar = document.createElement('div');
         bar.className = 'multi-brain-bar';
+        bar.style.display = 'none';  // 确保初始状态隐藏
         bar.innerHTML = `
             <div class="bar-header">
                 <div class="bar-title">
@@ -669,7 +669,20 @@
         const cards = document.querySelectorAll('.idea-card');
         
         trigger.classList.toggle('active', state.enabled);
-        bar.classList.toggle('active', state.enabled);
+        
+        if (state.enabled) {
+            bar.style.display = 'block';
+            // 使用setTimeout确保display改变后动画生效
+            setTimeout(() => {
+                bar.classList.add('active');
+            }, 10);
+        } else {
+            bar.classList.remove('active');
+            // 等待动画完成后隐藏
+            setTimeout(() => {
+                bar.style.display = 'none';
+            }, 400);
+        }
         
         cards.forEach(card => {
             card.classList.toggle('selection-mode', state.enabled);
@@ -684,8 +697,29 @@
 
     // 关闭多选模式
     function closeMultiMode() {
-        state.enabled = false;
-        toggleMultiMode();
+        if (state.enabled) {
+            state.enabled = false;
+            
+            const trigger = document.querySelector('.multi-brain-trigger');
+            const bar = document.querySelector('.multi-brain-bar');
+            const cards = document.querySelectorAll('.idea-card');
+            
+            trigger.classList.remove('active');
+            bar.classList.remove('active');
+            
+            // 等待动画完成后隐藏
+            setTimeout(() => {
+                bar.style.display = 'none';
+            }, 400);
+            
+            cards.forEach(card => {
+                card.classList.remove('selection-mode');
+            });
+            
+            state.targetSlot = null;
+            updateSlotHighlight();
+            hideSelectionHint();
+        }
     }
 
     // 分配到槽位
