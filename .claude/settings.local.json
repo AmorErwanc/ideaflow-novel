@@ -18,7 +18,11 @@
       "mcp__zen__codereview",
       "Bash(ls:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(mkdir:*)",
+      "Bash(mv:*)",
+      "Bash(tree:*)",
+      "Bash(git push:*)"
     ],
     "deny": []
   }

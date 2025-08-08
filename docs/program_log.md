@@ -207,3 +207,83 @@ function parsePartialXML(xmlContent) {
 - 用户体验大幅提升
 - 支持实时中断和恢复
 - 更流畅的视觉效果
+
+## 开发过程记录
+
+### 2025-08-08 - 版本迭代
+
+#### V1版本：基础流式
+- 实现了流式接收数据
+- 等待完整的`<story>`标签才显示
+- 整个卡片一次性出现
+
+#### V2版本：逐字显示（首次尝试）
+- 创建了`stream-script-v2.js`
+- 实现了增量XML解析
+- 检测到`<story>`立即创建卡片占位
+- 逐字显示synopsis和title内容
+
+**发现的问题：**
+- ✅ 第一个卡片能正确逐字显示
+- ❌ 第2-10个卡片没有逐字效果，直接完整显示
+- 原因分析：正则表达式匹配逻辑问题
+
+#### 问题详细分析
+
+**现象描述：**
+1. 第一个story卡片完美实现逐字显示
+2. 后续的story卡片创建了占位，但内容是一次性显示的
+
+**问题原因：**
+```javascript
+// 当前的正则匹配
+const synopsisMatch = fullContent.match(/<number>(\d+)<\/number>[\s\S]*?<synopsis>([^<]*)/);
+```
+这个正则总是匹配到第一个`<number>`标签，导致：
+- 永远只更新第一个卡片的内容
+- 其他卡片的内容没有被正确解析
+
+**需要改进的地方：**
+1. 改进XML解析策略，为每个story维护独立的解析状态
+2. 使用更精确的正则匹配或改用状态机模式
+3. 确保每个story的内容都能被正确识别和逐字显示
+
+#### V3版本：修复多卡片逐字显示
+- 创建了`stream-script-v3.js`
+- 使用状态机模式替代正则匹配
+- 为每个story维护独立的解析状态
+- 使用buffer逐字符处理，精确控制解析
+
+**核心改进：**
+1. **状态机模式**：
+   - 维护当前解析的story ID
+   - 记录当前解析的标签类型
+   - 使用buffer缓冲区处理
+
+2. **独立story状态**：
+   ```javascript
+   parserState.stories.set(tempId, {
+       tempId: tempId,
+       number: null,
+       synopsis: '',
+       title: '',
+       synopsisStarted: false,
+       titleStarted: false
+   });
+   ```
+
+3. **精确的标签检测**：
+   - 检测`<story>`立即创建卡片
+   - 检测`<synopsis>`开始逐字记录
+   - 检测`</synopsis>`停止记录
+   - 每个story独立处理，互不干扰
+
+**测试URL：**
+```
+http://localhost:8888/stream-test-v2.html
+```
+
+**预期效果：**
+- 所有10个卡片都能实现逐字显示
+- 每个卡片独立渲染，不会相互影响
+- 真正的打字机效果
