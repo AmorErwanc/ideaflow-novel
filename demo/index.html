@@ -179,12 +179,6 @@
                     </div>
                 </div>
 
-                <!-- 加载更多按钮 -->
-                <div class="load-more">
-                    <button class="btn-load-more">
-                        <i class="fas fa-plus-circle"></i> 加载更多创意
-                    </button>
-                </div>
             </div>
         </div>
 
@@ -254,17 +248,30 @@
                 </div>
             </div>
 
-            <!-- 快速建议 -->
-            <div class="quick-suggestions">
-                <button class="suggestion-chip">
-                    <i class="fas fa-fire"></i> 热门：都市异能
-                </button>
-                <button class="suggestion-chip">
-                    <i class="fas fa-star"></i> 推荐：悬疑推理
-                </button>
-                <button class="suggestion-chip">
-                    <i class="fas fa-dice"></i> 随机生成
-                </button>
+            <!-- 智能建议区 -->
+            <div class="smart-suggestions">
+                <div class="suggestions-row">
+                    <span class="suggestions-label">
+                        <i class="fas fa-magic"></i> 快速操作
+                    </span>
+                    <div class="suggestion-chips">
+                        <button class="suggestion-chip" data-action="more-ideas">
+                            <i class="fas fa-lightbulb"></i> 更多创意
+                        </button>
+                        <button class="suggestion-chip" data-action="hot-genre">
+                            <i class="fas fa-fire"></i> 热门类型
+                        </button>
+                        <button class="suggestion-chip" data-action="random">
+                            <i class="fas fa-dice"></i> 随机生成
+                        </button>
+                    </div>
+                </div>
+                <div class="suggestions-progress">
+                    <span class="progress-text">已加载 <span class="ideas-count">5</span> 个创意</span>
+                    <button class="btn-refresh-ideas" title="刷新创意">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
             </div>
 
             <!-- 输入区域 -->
@@ -289,5 +296,12 @@
     </button>
 
     <script src="demo.js"></script>
+    <script src="multi-selection.js"></script>
+    <script>
+        // 初始化多选功能
+        document.addEventListener('DOMContentLoaded', function() {
+            initMultiSelection();
+        });
+    </script>
 </body>
 </html>

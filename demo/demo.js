@@ -360,7 +360,7 @@ function initMobileToggle() {
 }
 
 // 加载更多功能
-document.querySelector('.btn-load-more')?.addEventListener('click', function() {
+document.querySelector('.btn-load-more-chat')?.addEventListener('click', function() {
     const grid = document.querySelector('.waterfall-grid');
     const newCards = [
         {

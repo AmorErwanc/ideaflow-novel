@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI小说创作平台 - 多线路创作系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="styles-new.css">
+</head>
+<body>
+    <!-- 固定顶部导航 -->
+    <nav class="navbar-fixed">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-feather-alt"></i>
+                <span>AI创作工坊</span>
+            </div>
+            
+            <!-- 多线路进度指示器 -->
+            <div class="nav-lines-indicator">
+                <div class="line-tab active" data-line="1">
+                    <span class="line-dot" style="background: #667eea"></span>
+                    <span class="line-name">线路1</span>
+                    <span class="line-progress">25%</span>
+                </div>
+                <div class="line-tab" data-line="2">
+                    <span class="line-dot" style="background: #4F46E5"></span>
+                    <span class="line-name">线路2</span>
+                    <span class="line-progress">0%</span>
+                </div>
+                <div class="line-tab" data-line="3">
+                    <span class="line-dot" style="background: #10B981"></span>
+                    <span class="line-name">未使用</span>
+                </div>
+            </div>
+            
+            <div class="nav-actions">
+                <button class="nav-btn">
+                    <i class="fas fa-bookmark"></i>
+                    <span class="nav-badge">3</span>
+                </button>
+                <button class="nav-btn">
+                    <i class="fas fa-history"></i>
+                </button>
+                <button class="nav-btn nav-user">
+                    <img src="https://ui-avatars.com/api/?name=User&background=3b82f6&color=fff" alt="用户">
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区域 - 可滚动 -->
+    <main class="main-content">
+        
+        <!-- 第一屏：脑洞选择区 -->
+        <section class="section-hero">
+            <div class="container">
+                <div class="hero-header">
+                    <h1 class="hero-title">
+                        <span class="gradient-text">开始你的创作之旅</span>
+                    </h1>
+                    <p class="hero-subtitle">选择最多3个脑洞，开启并行创作模式</p>
+                </div>
+                
+                <!-- 槽位管理卡片 -->
+                <div class="slots-manager">
+                    <div class="slots-card">
+                        <div class="slots-header">
+                            <h3><i class="fas fa-layer-group"></i> 创作槽位</h3>
+                            <span class="slots-status">已选择 <strong>0</strong> / 3</span>
+                        </div>
+                        <div class="slots-grid">
+                            <div class="slot-item empty" data-slot="1">
+                                <div class="slot-color" style="background: #667eea"></div>
+                                <div class="slot-body">
+                                    <div class="slot-icon">
+                                        <i class="fas fa-plus"></i>
+                                    </div>
+                                    <span class="slot-label">选择第一个创意</span>
+                                </div>
+                            </div>
+                            <div class="slot-item empty" data-slot="2">
+                                <div class="slot-color" style="background: #4F46E5"></div>
+                                <div class="slot-body">
+                                    <div class="slot-icon">
+                                        <i class="fas fa-plus"></i>
+                                    </div>
+                                    <span class="slot-label">选择第二个创意</span>
+                                </div>
+                            </div>
+                            <div class="slot-item empty" data-slot="3">
+                                <div class="slot-color" style="background: #10B981"></div>
+                                <div class="slot-body">
+                                    <div class="slot-icon">
+                                        <i class="fas fa-plus"></i>
+                                    </div>
+                                    <span class="slot-label">选择第三个创意</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="slots-actions">
+                            <button class="btn btn-primary" disabled>
+                                <i class="fas fa-rocket"></i> 开始创作
+                            </button>
+                            <button class="btn btn-ghost">
+                                <i class="fas fa-redo"></i> 重置选择
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 第二屏：创意展示区 -->
+        <section class="section-ideas">
+            <div class="container">
+                <div class="section-header">
+                    <h2>探索创意灵感</h2>
+                    <div class="section-controls">
+                        <div class="filter-chips">
+                            <button class="chip active">全部</button>
+                            <button class="chip">科幻</button>
+                            <button class="chip">悬疑</button>
+                            <button class="chip">爱情</button>
+                            <button class="chip">奇幻</button>
+                        </div>
+                        <button class="btn-icon">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 创意卡片网格 -->
+                <div class="ideas-grid">
+                    <!-- 示例卡片 -->
+                    <div class="idea-card" data-id="1">
+                        <div class="card-badge">科幻</div>
+                        <h3 class="card-title">时间旅行者的悖论</h3>
+                        <p class="card-description">
+                            在2157年，时间旅行已经成为现实。主人公发现自己陷入了一个时间循环，
+                            每次试图改变过去都会导致更糟糕的未来...
+                        </p>
+                        <div class="card-meta">
+                            <span><i class="fas fa-star"></i> 4.8</span>
+                            <span><i class="fas fa-eye"></i> 1.2k</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn-card-select">
+                                <i class="fas fa-plus"></i> 选择
+                            </button>
+                            <button class="btn-card-fav">
+                                <i class="far fa-heart"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="idea-card" data-id="2">
+                        <div class="card-badge">悬疑</div>
+                        <h3 class="card-title">消失的第七个房间</h3>
+                        <p class="card-description">
+                            一座古老的旅馆，六个房间，七个客人。当第七个客人神秘失踪后，
+                            其他人发现这座旅馆的平面图上原本应该有第七个房间...
+                        </p>
+                        <div class="card-meta">
+                            <span><i class="fas fa-star"></i> 4.9</span>
+                            <span><i class="fas fa-eye"></i> 980</span>
+                        </div>
+                        <div class="card-actions">
+                            <button class="btn-card-select">
+                                <i class="fas fa-plus"></i> 选择
+                            </button>
+                            <button class="btn-card-fav">
+                                <i class="far fa-heart"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 更多卡片... -->
+                </div>
+                
+                <!-- 加载更多区域 -->
+                <div class="load-more-area">
+                    <button class="btn btn-outline">
+                        <i class="fas fa-arrow-down"></i> 加载更多创意
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 第三屏：创作进度管理 -->
+        <section class="section-progress">
+            <div class="container">
+                <div class="section-header">
+                    <h2>创作进度管理</h2>
+                </div>
+                
+                <div class="progress-cards">
+                    <!-- 线路1进度卡片 -->
+                    <div class="progress-card" data-line="1">
+                        <div class="progress-header">
+                            <div class="progress-indicator" style="background: #667eea"></div>
+                            <h3>线路 1：时间旅行者的悖论</h3>
+                            <button class="btn-expand">
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                        </div>
+                        <div class="progress-body">
+                            <div class="progress-timeline">
+                                <div class="timeline-item completed">
+                                    <div class="timeline-dot"></div>
+                                    <div class="timeline-content">
+                                        <h4>脑洞构思</h4>
+                                        <p>已完成</p>
+                                    </div>
+                                </div>
+                                <div class="timeline-item active">
+                                    <div class="timeline-dot"></div>
+                                    <div class="timeline-content">
+                                        <h4>大纲创建</h4>
+                                        <p>进行中...</p>
+                                        <div class="mini-progress">
+                                            <div class="mini-progress-bar" style="width: 45%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="timeline-item">
+                                    <div class="timeline-dot"></div>
+                                    <div class="timeline-content">
+                                        <h4>小说撰写</h4>
+                                        <p>待开始</p>
+                                    </div>
+                                </div>
+                                <div class="timeline-item">
+                                    <div class="timeline-dot"></div>
+                                    <div class="timeline-content">
+                                        <h4>剧本改编</h4>
+                                        <p>待开始</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="progress-actions">
+                            <button class="btn btn-sm btn-primary">继续创作</button>
+                            <button class="btn btn-sm btn-ghost">查看详情</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 添加新线路卡片 -->
+                    <div class="progress-card add-new">
+                        <div class="add-new-body">
+                            <i class="fas fa-plus-circle"></i>
+                            <p>添加新的创作线路</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 第四屏：AI助手交互区 -->
+        <section class="section-assistant">
+            <div class="container">
+                <div class="assistant-wrapper">
+                    <div class="assistant-main">
+                        <div class="assistant-header">
+                            <div class="assistant-avatar">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <div class="assistant-info">
+                                <h3>AI创作助手</h3>
+                                <span class="status online">在线</span>
+                            </div>
+                        </div>
+                        
+                        <div class="chat-container">
+                            <div class="chat-messages">
+                                <div class="message assistant">
+                                    <div class="message-bubble">
+                                        👋 嗨！我是你的AI创作助手。我可以帮你生成创意、构建大纲、撰写小说和改编剧本。
+                                        让我们一起创作精彩的故事吧！
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="chat-input-area">
+                                <div class="input-wrapper">
+                                    <input type="text" placeholder="输入你的想法..." class="chat-input">
+                                    <button class="btn-send">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                </div>
+                                <div class="quick-actions">
+                                    <button class="quick-btn">生成新创意</button>
+                                    <button class="quick-btn">优化大纲</button>
+                                    <button class="quick-btn">续写内容</button>
+                                    <button class="quick-btn">风格调整</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 侧边信息面板 -->
+                    <div class="assistant-sidebar">
+                        <div class="sidebar-card">
+                            <h4>创作统计</h4>
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <span class="stat-value">15</span>
+                                    <span class="stat-label">创意总数</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-value">3</span>
+                                    <span class="stat-label">进行中</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-value">5</span>
+                                    <span class="stat-label">已完成</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-value">2.5k</span>
+                                    <span class="stat-label">总字数</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="sidebar-card">
+                            <h4>最近使用</h4>
+                            <div class="recent-list">
+                                <div class="recent-item">
+                                    <i class="fas fa-clock"></i>
+                                    <span>时间旅行者的悖论</span>
+                                </div>
+                                <div class="recent-item">
+                                    <i class="fas fa-clock"></i>
+                                    <span>AI恋人</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 浮动操作按钮 -->
+    <div class="fab-container">
+        <button class="fab fab-main">
+            <i class="fas fa-plus"></i>
+        </button>
+        <div class="fab-menu">
+            <button class="fab-item" title="新建创意">
+                <i class="fas fa-lightbulb"></i>
+            </button>
+            <button class="fab-item" title="导入文本">
+                <i class="fas fa-file-import"></i>
+            </button>
+            <button class="fab-item" title="AI对话">
+                <i class="fas fa-comments"></i>
+            </button>
+        </div>
+    </div>
+
+    <script src="script-new.js"></script>
+</body>
+</html>
