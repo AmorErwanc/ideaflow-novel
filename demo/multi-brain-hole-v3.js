@@ -1,5 +1,5 @@
-// 多脑洞并行生成 V3 - 无缝整合版
-// 真正融入原有界面，提供自然流畅的体验
+// 多脑洞并行生成 V3 - 极简优雅版本
+// 底部栏控制 + 卡片直接选择
 
 (function() {
     'use strict';
@@ -7,179 +7,436 @@
     // 配置
     const CONFIG = {
         MAX_SLOTS: 3,
-        COLORS: [
-            { primary: '#8B5CF6', light: '#F3E8FF', name: '紫色线路' },
-            { primary: '#3B82F6', light: '#EFF6FF', name: '蓝色线路' },
-            { primary: '#10B981', light: '#F0FDF4', name: '绿色线路' }
-        ]
+        ANIMATION_DURATION: 300,
+        COLORS: {
+            slot1: { 
+                primary: '#8B5CF6', 
+                light: 'rgba(139, 92, 246, 0.1)', 
+                lighter: 'rgba(139, 92, 246, 0.05)',
+                name: '紫色' 
+            },
+            slot2: { 
+                primary: '#3B82F6', 
+                light: 'rgba(59, 130, 246, 0.1)', 
+                lighter: 'rgba(59, 130, 246, 0.05)',
+                name: '蓝色' 
+            },
+            slot3: { 
+                primary: '#10B981', 
+                light: 'rgba(16, 185, 129, 0.1)', 
+                lighter: 'rgba(16, 185, 129, 0.05)',
+                name: '绿色' 
+            }
+        }
     };
 
     // 状态管理
     const state = {
-        mode: 'single',
-        selectedCards: new Map(), // cardId -> lineNumber
-        activeLines: new Set(),
-        currentLine: null,
-        isFirstTime: !localStorage.getItem('multiBrainHoleV3Used')
+        enabled: false,
+        selectedSlots: new Map(), // ideaId -> slotNumber
+        targetSlot: null, // 当前要填充的槽位
+        lines: {}
     };
 
     // 初始化
     function init() {
-        enhanceExistingUI();
-        addModeToggle();
+        console.log('[多脑洞V3] 初始化开始');
+        injectStyles();
+        createFloatingButton();
+        createBottomBar();
+        enhanceIdeaCards();
         bindEvents();
-        
-        // 首次使用时显示引导
-        if (state.isFirstTime) {
-            setTimeout(() => showIntroduction(), 1500);
-        }
+        restoreState();
+        console.log('[多脑洞V3] 初始化完成');
     }
 
-    // 增强现有UI
-    function enhanceExistingUI() {
-        // 为每个卡片添加多选功能
-        const cards = document.querySelectorAll('.idea-card');
-        cards.forEach(card => {
-            // 添加选择指示器
-            const indicator = document.createElement('div');
-            indicator.className = 'multi-select-indicator';
-            indicator.innerHTML = `
-                <div class="line-badge" style="display: none;">
-                    <span class="line-number"></span>
-                </div>
-            `;
-            card.appendChild(indicator);
-
-            // 修改选择按钮行为
-            const selectBtn = card.querySelector('.btn-select');
-            if (selectBtn) {
-                // 保存原始点击处理
-                const originalOnClick = selectBtn.onclick;
-                selectBtn.onclick = null;
-                
-                selectBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    if (state.mode === 'single') {
-                        // 单选模式：执行原有逻辑
-                        if (originalOnClick) originalOnClick.call(selectBtn, e);
-                    } else {
-                        // 多选模式：执行多选逻辑
-                        handleMultiSelect(card);
-                    }
-                });
-            }
-        });
-
-        // 增强智能建议区域
-        const suggestionsArea = document.querySelector('.smart-suggestions');
-        if (suggestionsArea) {
-            // 添加多线路状态显示
-            const multiStatus = document.createElement('div');
-            multiStatus.className = 'multi-line-status';
-            multiStatus.style.display = 'none';
-            multiStatus.innerHTML = `
-                <div class="status-header">
-                    <i class="fas fa-layer-group"></i>
-                    <span>多线路创作</span>
-                </div>
-                <div class="selected-lines">
-                    <!-- 动态生成 -->
-                </div>
-                <div class="status-actions">
-                    <button class="btn-start-multi" disabled>
-                        <i class="fas fa-rocket"></i> 开始创作
-                    </button>
-                    <button class="btn-clear-selection">
-                        <i class="fas fa-redo"></i> 重选
-                    </button>
-                </div>
-            `;
-            suggestionsArea.appendChild(multiStatus);
-        }
-
-        // 添加样式
+    // 注入样式
+    function injectStyles() {
         const style = document.createElement('style');
         style.textContent = `
-            /* 模式切换按钮 */
-            .mode-toggle {
+            /* 浮动触发按钮 */
+            .multi-brain-trigger {
                 position: fixed;
-                top: 50%;
-                right: 20px;
-                transform: translateY(-50%);
-                background: white;
-                border-radius: 40px;
-                padding: 8px;
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+                bottom: 24px;
+                right: 24px;
+                width: 56px;
+                height: 56px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                border-radius: 50%;
                 display: flex;
-                flex-direction: column;
-                gap: 8px;
-                z-index: 100;
-                transition: all 0.3s ease;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                z-index: 99;
+                border: none;
+                color: white;
+                font-size: 24px;
             }
 
-            .mode-toggle-btn {
-                width: 44px;
-                height: 44px;
+            .multi-brain-trigger:hover {
+                transform: scale(1.1);
+                box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+            }
+
+            .multi-brain-trigger.active {
+                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                transform: rotate(45deg);
+            }
+
+            .trigger-badge {
+                position: absolute;
+                top: -4px;
+                right: -4px;
+                background: #ef4444;
+                color: white;
+                width: 20px;
+                height: 20px;
                 border-radius: 50%;
-                border: 2px solid transparent;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 11px;
+                font-weight: 700;
+                border: 2px solid white;
+            }
+
+            /* 底部控制栏 */
+            .multi-brain-bar {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
                 background: white;
-                color: #64748b;
+                box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+                transform: translateY(100%);
+                transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                z-index: 1000;
+                display: none;
+            }
+
+            .multi-brain-bar.active {
+                transform: translateY(0);
+            }
+
+            .bar-header {
+                padding: 12px 24px;
+                background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+                border-bottom: 1px solid #e2e8f0;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .bar-title {
+                font-size: 14px;
+                font-weight: 600;
+                color: #1e293b;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .bar-title i {
+                color: #8b5cf6;
+            }
+
+            .bar-close {
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                background: transparent;
+                border: none;
+                color: #94a3b8;
                 cursor: pointer;
                 display: flex;
                 align-items: center;
                 justify-content: center;
+                transition: all 0.2s ease;
+            }
+
+            .bar-close:hover {
+                background: #f1f5f9;
+                color: #64748b;
+            }
+
+            .bar-content {
+                padding: 20px 24px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 24px;
+            }
+
+            .selected-slots {
+                display: flex;
+                gap: 12px;
+                flex: 1;
+            }
+
+            .mini-slot {
+                background: #f8fafc;
+                border: 2px dashed #cbd5e1;
+                border-radius: 12px;
+                padding: 14px 16px;
+                flex: 1;
+                max-width: 320px;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                cursor: pointer;
                 transition: all 0.3s ease;
                 position: relative;
+                min-height: 60px;
             }
 
-            .mode-toggle-btn:hover {
-                transform: scale(1.1);
+            .mini-slot:hover {
+                border-color: #94a3b8;
+                background: #f1f5f9;
+                transform: translateY(-2px);
             }
 
-            .mode-toggle-btn.active {
-                background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-                color: white;
-                border-color: white;
+            .mini-slot.filled {
+                border-style: solid;
+                background: white;
+                cursor: default;
             }
 
-            .mode-toggle-btn .tooltip {
-                position: absolute;
-                right: 60px;
-                background: #1e293b;
-                color: white;
-                padding: 6px 12px;
-                border-radius: 6px;
-                font-size: 12px;
+            .mini-slot.slot-1.filled {
+                border-color: #8B5CF6;
+                background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, white 100%);
+            }
+
+            .mini-slot.slot-2.filled {
+                border-color: #3B82F6;
+                background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, white 100%);
+            }
+
+            .mini-slot.slot-3.filled {
+                border-color: #10B981;
+                background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, white 100%);
+            }
+
+            .mini-slot.selecting {
+                animation: pulse-border 1.5s infinite;
+                border-color: #8b5cf6;
+                background: rgba(139, 92, 246, 0.05);
+            }
+
+            @keyframes pulse-border {
+                0%, 100% { 
+                    border-color: #8b5cf6;
+                    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4);
+                }
+                50% { 
+                    border-color: #a78bfa;
+                    box-shadow: 0 0 0 8px rgba(139, 92, 246, 0);
+                }
+            }
+
+            .slot-icon {
+                width: 36px;
+                height: 36px;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+                flex-shrink: 0;
+            }
+
+            .mini-slot.slot-1 .slot-icon {
+                background: rgba(139, 92, 246, 0.1);
+                color: #8B5CF6;
+            }
+
+            .mini-slot.slot-2 .slot-icon {
+                background: rgba(59, 130, 246, 0.1);
+                color: #3B82F6;
+            }
+
+            .mini-slot.slot-3 .slot-icon {
+                background: rgba(16, 185, 129, 0.1);
+                color: #10B981;
+            }
+
+            .slot-text {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .slot-label {
+                font-size: 11px;
+                color: #94a3b8;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 4px;
+                font-weight: 600;
+            }
+
+            .slot-title {
+                font-size: 14px;
+                font-weight: 600;
+                color: #1e293b;
                 white-space: nowrap;
-                opacity: 0;
-                pointer-events: none;
-                transition: opacity 0.3s ease;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                line-height: 1.3;
             }
 
-            .mode-toggle-btn:hover .tooltip {
-                opacity: 1;
+            .slot-empty-text {
+                font-size: 13px;
+                color: #94a3b8;
             }
 
-            /* 多选指示器 */
-            .multi-select-indicator {
+            .mini-slot-remove {
                 position: absolute;
                 top: -8px;
                 right: -8px;
-                z-index: 10;
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                background: white;
+                border: 2px solid #e2e8f0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                opacity: 0;
+                transition: all 0.2s ease;
+                color: #94a3b8;
+                font-size: 12px;
             }
 
-            .line-badge {
-                width: 32px;
-                height: 32px;
+            .mini-slot.filled:hover .mini-slot-remove {
+                opacity: 1;
+            }
+
+            .mini-slot-remove:hover {
+                background: #fee2e2;
+                border-color: #fecaca;
+                color: #ef4444;
+                transform: scale(1.1);
+            }
+
+            .bar-actions {
+                display: flex;
+                gap: 12px;
+            }
+
+            .bar-btn {
+                padding: 10px 20px;
+                border-radius: 10px;
+                border: none;
+                font-weight: 500;
+                font-size: 14px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                white-space: nowrap;
+            }
+
+            .bar-btn-primary {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+            }
+
+            .bar-btn-primary:hover:not(:disabled) {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            }
+
+            .bar-btn-primary:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+                background: #cbd5e1;
+            }
+
+            .bar-btn-secondary {
+                background: #f1f5f9;
+                color: #64748b;
+            }
+
+            .bar-btn-secondary:hover {
+                background: #e2e8f0;
+                color: #475569;
+            }
+
+            /* 选择提示 */
+            .selection-hint {
+                position: fixed;
+                top: 100px;
+                left: 50%;
+                transform: translateX(-50%) translateY(-20px);
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 12px 24px;
+                border-radius: 50px;
+                font-size: 14px;
+                font-weight: 500;
+                box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                z-index: 100;
+            }
+
+            .selection-hint.active {
+                opacity: 1;
+                visibility: visible;
+                transform: translateX(-50%) translateY(0);
+            }
+
+            /* 卡片增强样式 */
+            .idea-card {
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                position: relative;
+            }
+
+            .idea-card.selection-mode {
+                cursor: pointer;
+            }
+
+            .idea-card.selection-mode:hover {
+                transform: translateY(-4px) scale(1.02);
+                box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+            }
+
+            .idea-card.selected-slot-1 {
+                border: 3px solid #8B5CF6 !important;
+                box-shadow: 0 0 0 6px rgba(139, 92, 246, 0.1);
+            }
+
+            .idea-card.selected-slot-2 {
+                border: 3px solid #3B82F6 !important;
+                box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.1);
+            }
+
+            .idea-card.selected-slot-3 {
+                border: 3px solid #10B981 !important;
+                box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.1);
+            }
+
+            .card-slot-indicator {
+                position: absolute;
+                top: -12px;
+                right: -12px;
+                width: 36px;
+                height: 36px;
                 border-radius: 50%;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-weight: bold;
+                font-weight: 700;
                 font-size: 16px;
                 color: white;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-                animation: bounceIn 0.3s ease;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+                z-index: 10;
+                animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
             }
 
             @keyframes bounceIn {
@@ -188,661 +445,527 @@
                 100% { transform: scale(1); }
             }
 
-            /* 多选模式下的卡片样式 */
-            .multi-select-mode .idea-card {
-                cursor: pointer;
+            .card-slot-indicator.slot-1 {
+                background: linear-gradient(135deg, #8B5CF6 0%, #a78bfa 100%);
+            }
+
+            .card-slot-indicator.slot-2 {
+                background: linear-gradient(135deg, #3B82F6 0%, #60a5fa 100%);
+            }
+
+            .card-slot-indicator.slot-3 {
+                background: linear-gradient(135deg, #10B981 0%, #34d399 100%);
+            }
+
+            /* 按钮增强 */
+            .idea-card .btn-select {
                 transition: all 0.3s ease;
             }
 
-            .multi-select-mode .idea-card:hover {
-                transform: translateY(-4px);
-                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-            }
-
-            .multi-select-mode .idea-card.selected-line-1 {
-                border: 2px solid #8B5CF6;
-                background: linear-gradient(135deg, #F3E8FF 0%, white 100%);
-            }
-
-            .multi-select-mode .idea-card.selected-line-2 {
-                border: 2px solid #3B82F6;
-                background: linear-gradient(135deg, #EFF6FF 0%, white 100%);
-            }
-
-            .multi-select-mode .idea-card.selected-line-3 {
-                border: 2px solid #10B981;
-                background: linear-gradient(135deg, #F0FDF4 0%, white 100%);
-            }
-
-            /* 多线路状态 */
-            .multi-line-status {
-                background: linear-gradient(135deg, #f8fafc 0%, white 100%);
-                border-radius: 12px;
-                padding: 16px;
-                margin-top: 16px;
-                border: 1px solid #e2e8f0;
-            }
-
-            .status-header {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                margin-bottom: 12px;
-                font-weight: 600;
-                color: #1e293b;
-            }
-
-            .selected-lines {
-                display: flex;
-                flex-direction: column;
-                gap: 8px;
-                margin-bottom: 16px;
-            }
-
-            .line-item {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                padding: 8px 12px;
-                background: white;
-                border-radius: 8px;
-                border: 1px solid #e2e8f0;
-            }
-
-            .line-color-dot {
-                width: 8px;
-                height: 8px;
-                border-radius: 50%;
-            }
-
-            .line-title {
-                flex: 1;
-                font-size: 14px;
-                color: #64748b;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-
-            .line-remove {
-                background: none;
-                border: none;
-                color: #94a3b8;
-                cursor: pointer;
-                padding: 4px;
-            }
-
-            .line-remove:hover {
-                color: #ef4444;
-            }
-
-            .status-actions {
-                display: flex;
-                gap: 8px;
-            }
-
-            .status-actions button {
-                flex: 1;
-                padding: 8px 16px;
-                border: none;
-                border-radius: 8px;
-                font-size: 14px;
-                font-weight: 500;
-                cursor: pointer;
-                transition: all 0.3s ease;
-            }
-
-            .btn-start-multi {
-                background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-                color: white;
-            }
-
-            .btn-start-multi:not(:disabled):hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-            }
-
-            .btn-start-multi:disabled {
-                opacity: 0.5;
-                cursor: not-allowed;
-            }
-
-            .btn-clear-selection {
+            .idea-card.selected-slot-1 .btn-select,
+            .idea-card.selected-slot-2 .btn-select,
+            .idea-card.selected-slot-3 .btn-select {
                 background: #f1f5f9;
                 color: #64748b;
-            }
-
-            .btn-clear-selection:hover {
-                background: #e2e8f0;
-            }
-
-            /* 引导提示 */
-            .intro-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0, 0, 0, 0.7);
-                z-index: 1000;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-
-            .intro-modal {
-                background: white;
-                border-radius: 16px;
-                padding: 32px;
-                max-width: 480px;
-                text-align: center;
-                animation: slideUp 0.3s ease;
-            }
-
-            @keyframes slideUp {
-                from {
-                    transform: translateY(20px);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateY(0);
-                    opacity: 1;
-                }
-            }
-
-            .intro-icon {
-                width: 64px;
-                height: 64px;
-                margin: 0 auto 16px;
-                background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                color: white;
-                font-size: 28px;
-            }
-
-            .intro-title {
-                font-size: 24px;
-                font-weight: 700;
-                color: #1e293b;
-                margin-bottom: 12px;
-            }
-
-            .intro-desc {
-                color: #64748b;
-                margin-bottom: 24px;
-                line-height: 1.6;
-            }
-
-            .intro-features {
-                text-align: left;
-                margin: 24px 0;
-                padding: 20px;
-                background: #f8fafc;
-                border-radius: 12px;
-            }
-
-            .intro-feature {
-                display: flex;
-                align-items: flex-start;
-                gap: 12px;
-                margin-bottom: 12px;
-            }
-
-            .intro-feature:last-child {
-                margin-bottom: 0;
-            }
-
-            .intro-feature i {
-                color: #3b82f6;
-                margin-top: 2px;
-            }
-
-            .intro-feature span {
-                flex: 1;
-                color: #475569;
-                font-size: 14px;
-            }
-
-            .intro-actions {
-                display: flex;
-                gap: 12px;
-            }
-
-            .intro-actions button {
-                flex: 1;
-                padding: 12px 24px;
-                border: none;
-                border-radius: 8px;
-                font-weight: 500;
-                cursor: pointer;
-                transition: all 0.3s ease;
-            }
-
-            .btn-try-now {
-                background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-                color: white;
-            }
-
-            .btn-try-now:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-            }
-
-            .btn-later {
-                background: #f1f5f9;
-                color: #64748b;
-            }
-
-            .btn-later:hover {
-                background: #e2e8f0;
-            }
-
-            /* 提示气泡 */
-            .hint-bubble {
-                position: absolute;
-                background: #1e293b;
-                color: white;
-                padding: 8px 12px;
-                border-radius: 8px;
-                font-size: 12px;
-                white-space: nowrap;
-                z-index: 200;
                 pointer-events: none;
-                animation: pulse 2s ease infinite;
             }
 
-            @keyframes pulse {
-                0%, 100% { transform: scale(1); }
-                50% { transform: scale(1.05); }
-            }
+            /* 响应式 */
+            @media (max-width: 768px) {
+                .selected-slots {
+                    flex-direction: column;
+                }
+                
+                .mini-slot {
+                    max-width: 100%;
+                }
 
-            .hint-bubble::after {
-                content: '';
-                position: absolute;
-                bottom: -6px;
-                left: 50%;
-                transform: translateX(-50%);
-                width: 0;
-                height: 0;
-                border-left: 6px solid transparent;
-                border-right: 6px solid transparent;
-                border-top: 6px solid #1e293b;
+                .bar-content {
+                    flex-direction: column;
+                    gap: 16px;
+                }
+
+                .bar-actions {
+                    width: 100%;
+                }
+
+                .bar-btn {
+                    flex: 1;
+                    justify-content: center;
+                }
             }
         `;
         document.head.appendChild(style);
     }
 
-    // 添加模式切换按钮
-    function addModeToggle() {
-        const toggle = document.createElement('div');
-        toggle.className = 'mode-toggle';
-        toggle.innerHTML = `
-            <button class="mode-toggle-btn active" data-mode="single">
-                <i class="fas fa-file-alt"></i>
-                <span class="tooltip">单线模式</span>
-            </button>
-            <button class="mode-toggle-btn" data-mode="multi">
-                <i class="fas fa-layer-group"></i>
-                <span class="tooltip">多线路模式</span>
-            </button>
+    // 创建浮动按钮
+    function createFloatingButton() {
+        const button = document.createElement('button');
+        button.className = 'multi-brain-trigger';
+        button.innerHTML = `
+            <i class="fas fa-layer-group"></i>
+            <span class="trigger-badge" style="display: none;">0</span>
         `;
-        document.body.appendChild(toggle);
+        document.body.appendChild(button);
+    }
+
+    // 创建底部栏
+    function createBottomBar() {
+        const bar = document.createElement('div');
+        bar.className = 'multi-brain-bar';
+        bar.innerHTML = `
+            <div class="bar-header">
+                <div class="bar-title">
+                    <i class="fas fa-sparkles"></i>
+                    多线路创作模式
+                </div>
+                <button class="bar-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="bar-content">
+                <div class="selected-slots">
+                    <div class="mini-slot slot-1 empty" data-slot="1">
+                        <div class="slot-icon">
+                            <i class="fas fa-plus"></i>
+                        </div>
+                        <div class="slot-text">
+                            <div class="slot-label">槽位 1</div>
+                            <div class="slot-empty-text">点击选择创意</div>
+                        </div>
+                    </div>
+                    <div class="mini-slot slot-2 empty" data-slot="2">
+                        <div class="slot-icon">
+                            <i class="fas fa-plus"></i>
+                        </div>
+                        <div class="slot-text">
+                            <div class="slot-label">槽位 2</div>
+                            <div class="slot-empty-text">点击选择创意</div>
+                        </div>
+                    </div>
+                    <div class="mini-slot slot-3 empty" data-slot="3">
+                        <div class="slot-icon">
+                            <i class="fas fa-plus"></i>
+                        </div>
+                        <div class="slot-text">
+                            <div class="slot-label">槽位 3</div>
+                            <div class="slot-empty-text">点击选择创意</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bar-actions">
+                    <button class="bar-btn bar-btn-secondary" id="btn-clear-all">
+                        <i class="fas fa-redo"></i>
+                        重置
+                    </button>
+                    <button class="bar-btn bar-btn-primary" id="btn-start-creation" disabled>
+                        <i class="fas fa-rocket"></i>
+                        开始创作
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(bar);
+
+        // 创建选择提示
+        const hint = document.createElement('div');
+        hint.className = 'selection-hint';
+        hint.innerHTML = `<i class="fas fa-hand-pointer"></i> 点击下方卡片选择创意`;
+        document.body.appendChild(hint);
+    }
+
+    // 增强创意卡片
+    function enhanceIdeaCards() {
+        // 等待卡片加载
+        setTimeout(() => {
+            const cards = document.querySelectorAll('.idea-card');
+            cards.forEach(card => {
+                // 添加点击事件
+                card.addEventListener('click', handleCardClick);
+            });
+        }, 500);
+    }
+
+    // 处理卡片点击
+    function handleCardClick(e) {
+        if (!state.enabled) return;
+        if (e.target.closest('.btn-edit') || e.target.closest('.btn-favorite')) return;
+        
+        const card = e.currentTarget;
+        const ideaId = card.dataset.id;
+        
+        if (state.targetSlot) {
+            // 有指定槽位，直接分配
+            assignToSlot(ideaId, state.targetSlot, card);
+            state.targetSlot = null;
+            updateSlotHighlight();
+        } else {
+            // 自动分配或移除
+            const currentSlot = findIdeaSlot(ideaId);
+            if (currentSlot) {
+                // 已选择，移除
+                removeFromSlot(currentSlot);
+            } else {
+                // 未选择，自动分配
+                const emptySlot = findEmptySlot();
+                if (emptySlot) {
+                    assignToSlot(ideaId, emptySlot, card);
+                } else {
+                    showMessage('已选择3个创意，请先移除一个或点击槽位替换');
+                }
+            }
+        }
     }
 
     // 绑定事件
     function bindEvents() {
-        // 模式切换
-        document.querySelectorAll('.mode-toggle-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const mode = btn.dataset.mode;
-                switchMode(mode);
+        // 浮动按钮
+        document.querySelector('.multi-brain-trigger').addEventListener('click', toggleMultiMode);
+        
+        // 关闭按钮
+        document.querySelector('.bar-close').addEventListener('click', closeMultiMode);
+        
+        // 槽位点击
+        document.querySelectorAll('.mini-slot').forEach(slot => {
+            slot.addEventListener('click', (e) => {
+                if (e.target.closest('.mini-slot-remove')) return;
+                
+                const slotNumber = parseInt(slot.dataset.slot);
+                
+                if (slot.classList.contains('filled')) {
+                    // 已填充，不做任何操作
+                    return;
+                } else {
+                    // 空槽位，进入选择模式
+                    state.targetSlot = slotNumber;
+                    updateSlotHighlight();
+                    showSelectionHint();
+                }
             });
         });
-
+        
+        // 移除按钮
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.mini-slot-remove')) {
+                const slot = e.target.closest('.mini-slot');
+                const slotNumber = parseInt(slot.dataset.slot);
+                removeFromSlot(slotNumber);
+            }
+        });
+        
+        // 重置按钮
+        document.getElementById('btn-clear-all').addEventListener('click', clearAll);
+        
         // 开始创作按钮
-        const startBtn = document.querySelector('.btn-start-multi');
-        if (startBtn) {
-            startBtn.addEventListener('click', startMultiLineCreation);
-        }
+        document.getElementById('btn-start-creation').addEventListener('click', startCreation);
+    }
 
-        // 清除选择按钮
-        const clearBtn = document.querySelector('.btn-clear-selection');
-        if (clearBtn) {
-            clearBtn.addEventListener('click', clearAllSelections);
+    // 切换多选模式
+    function toggleMultiMode() {
+        state.enabled = !state.enabled;
+        
+        const trigger = document.querySelector('.multi-brain-trigger');
+        const bar = document.querySelector('.multi-brain-bar');
+        const cards = document.querySelectorAll('.idea-card');
+        
+        trigger.classList.toggle('active', state.enabled);
+        bar.classList.toggle('active', state.enabled);
+        
+        cards.forEach(card => {
+            card.classList.toggle('selection-mode', state.enabled);
+        });
+        
+        if (!state.enabled) {
+            state.targetSlot = null;
+            updateSlotHighlight();
+            hideSelectionHint();
         }
     }
 
-    // 切换模式
-    function switchMode(mode) {
-        state.mode = mode;
+    // 关闭多选模式
+    function closeMultiMode() {
+        state.enabled = false;
+        toggleMultiMode();
+    }
+
+    // 分配到槽位
+    function assignToSlot(ideaId, slotNumber, card) {
+        const ideaData = extractIdeaData(card);
+        
+        // 更新状态
+        state.selectedSlots.set(ideaId, slotNumber);
+        state.lines[`line${slotNumber}`] = {
+            idea: ideaData,
+            outline: { status: 'pending', data: null },
+            novel: { status: 'pending', data: null },
+            script: { status: 'pending', data: null }
+        };
+        
+        // 更新槽位UI
+        updateSlotUI(slotNumber, ideaData);
+        
+        // 更新卡片样式
+        updateCardStyle(card, slotNumber);
         
         // 更新按钮状态
-        document.querySelectorAll('.mode-toggle-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.dataset.mode === mode);
-        });
-
-        // 更新界面状态
-        const container = document.querySelector('.waterfall-container');
-        const multiStatus = document.querySelector('.multi-line-status');
+        updateButtonStates();
         
-        if (mode === 'multi') {
-            container?.classList.add('multi-select-mode');
-            multiStatus.style.display = 'block';
-            
-            // 显示提示
-            if (state.selectedCards.size === 0) {
-                showHint();
+        // 保存状态
+        saveState();
+        
+        showMessage(`已将"${ideaData.title}"添加到槽位${slotNumber}`);
+    }
+
+    // 从槽位移除
+    function removeFromSlot(slotNumber) {
+        // 找到对应的创意
+        let ideaId = null;
+        for (let [id, slot] of state.selectedSlots) {
+            if (slot === slotNumber) {
+                ideaId = id;
+                break;
             }
-        } else {
-            container?.classList.remove('multi-select-mode');
-            multiStatus.style.display = 'none';
-            clearAllSelections();
         }
-
-        // 更新消息
-        updateChatMessage(mode);
-    }
-
-    // 处理多选
-    function handleMultiSelect(card) {
-        const cardId = card.dataset.id;
         
-        if (state.selectedCards.has(cardId)) {
-            // 取消选择
-            removeSelection(cardId);
-        } else if (state.selectedCards.size < CONFIG.MAX_SLOTS) {
-            // 添加选择
-            addSelection(cardId);
-        } else {
-            // 已满提示
-            showMaxSelectionMessage();
-        }
-    }
-
-    // 添加选择
-    function addSelection(cardId) {
-        const lineNumber = state.selectedCards.size + 1;
-        state.selectedCards.set(cardId, lineNumber);
-        state.activeLines.add(lineNumber);
-
-        const card = document.querySelector(`.idea-card[data-id="${cardId}"]`);
+        if (!ideaId) return;
+        
+        // 更新状态
+        state.selectedSlots.delete(ideaId);
+        delete state.lines[`line${slotNumber}`];
+        
+        // 重置槽位UI
+        resetSlotUI(slotNumber);
+        
+        // 重置卡片样式
+        const card = document.querySelector(`.idea-card[data-id="${ideaId}"]`);
         if (card) {
-            // 更新卡片样式
-            card.classList.add(`selected-line-${lineNumber}`);
-            
-            // 显示角标
-            const badge = card.querySelector('.line-badge');
-            const numberSpan = card.querySelector('.line-number');
-            if (badge && numberSpan) {
-                badge.style.display = 'flex';
-                badge.style.background = CONFIG.COLORS[lineNumber - 1].primary;
-                numberSpan.textContent = lineNumber;
-            }
-
-            // 更新按钮
-            const selectBtn = card.querySelector('.btn-select');
-            if (selectBtn) {
-                selectBtn.innerHTML = `<i class="fas fa-check-circle"></i> 线路${lineNumber}`;
-                selectBtn.style.background = CONFIG.COLORS[lineNumber - 1].primary;
-                selectBtn.style.color = 'white';
-            }
+            resetCardStyle(card);
         }
-
-        updateSelectionStatus();
-    }
-
-    // 移除选择
-    function removeSelection(cardId) {
-        const lineNumber = state.selectedCards.get(cardId);
-        state.selectedCards.delete(cardId);
-        state.activeLines.delete(lineNumber);
-
-        const card = document.querySelector(`.idea-card[data-id="${cardId}"]`);
-        if (card) {
-            // 移除样式
-            card.classList.remove(`selected-line-${lineNumber}`);
-            
-            // 隐藏角标
-            const badge = card.querySelector('.line-badge');
-            if (badge) {
-                badge.style.display = 'none';
-            }
-
-            // 恢复按钮
-            const selectBtn = card.querySelector('.btn-select');
-            if (selectBtn) {
-                selectBtn.innerHTML = '<i class="fas fa-check"></i> 选择';
-                selectBtn.style.background = '';
-                selectBtn.style.color = '';
-            }
-        }
-
-        // 重新编号
-        reassignLineNumbers();
-        updateSelectionStatus();
-    }
-
-    // 重新分配线路编号
-    function reassignLineNumbers() {
-        const newMap = new Map();
-        let newLineNumber = 1;
         
-        state.selectedCards.forEach((oldLine, cardId) => {
-            const card = document.querySelector(`.idea-card[data-id="${cardId}"]`);
-            if (card) {
-                // 移除旧样式
-                card.classList.remove(`selected-line-${oldLine}`);
-                
-                // 添加新样式
-                card.classList.add(`selected-line-${newLineNumber}`);
-                
-                // 更新角标
-                const badge = card.querySelector('.line-badge');
-                const numberSpan = card.querySelector('.line-number');
-                if (badge && numberSpan) {
-                    badge.style.background = CONFIG.COLORS[newLineNumber - 1].primary;
-                    numberSpan.textContent = newLineNumber;
-                }
-
-                // 更新按钮
-                const selectBtn = card.querySelector('.btn-select');
-                if (selectBtn) {
-                    selectBtn.innerHTML = `<i class="fas fa-check-circle"></i> 线路${newLineNumber}`;
-                    selectBtn.style.background = CONFIG.COLORS[newLineNumber - 1].primary;
-                }
-            }
-            
-            newMap.set(cardId, newLineNumber);
-            newLineNumber++;
-        });
-        
-        state.selectedCards = newMap;
-    }
-
-    // 更新选择状态
-    function updateSelectionStatus() {
-        const selectedLines = document.querySelector('.selected-lines');
-        if (selectedLines) {
-            selectedLines.innerHTML = '';
-            
-            state.selectedCards.forEach((lineNumber, cardId) => {
-                const card = document.querySelector(`.idea-card[data-id="${cardId}"]`);
-                if (card) {
-                    const title = card.querySelector('.card-title')?.textContent || '';
-                    const lineItem = document.createElement('div');
-                    lineItem.className = 'line-item';
-                    lineItem.innerHTML = `
-                        <span class="line-color-dot" style="background: ${CONFIG.COLORS[lineNumber - 1].primary}"></span>
-                        <span class="line-title">${title}</span>
-                        <button class="line-remove" data-id="${cardId}">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    `;
-                    selectedLines.appendChild(lineItem);
-
-                    // 绑定移除事件
-                    lineItem.querySelector('.line-remove').addEventListener('click', () => {
-                        removeSelection(cardId);
-                    });
-                }
-            });
-        }
-
         // 更新按钮状态
-        const startBtn = document.querySelector('.btn-start-multi');
-        if (startBtn) {
-            startBtn.disabled = state.selectedCards.size === 0;
-            startBtn.innerHTML = `<i class="fas fa-rocket"></i> 开始创作 (${state.selectedCards.size}/3)`;
-        }
+        updateButtonStates();
+        
+        // 保存状态
+        saveState();
     }
 
-    // 清除所有选择
-    function clearAllSelections() {
-        state.selectedCards.forEach((lineNumber, cardId) => {
-            removeSelection(cardId);
-        });
-        state.selectedCards.clear();
-        state.activeLines.clear();
-        updateSelectionStatus();
+    // 提取创意数据
+    function extractIdeaData(card) {
+        return {
+            id: card.dataset.id,
+            title: card.querySelector('.card-title')?.textContent || '',
+            content: card.querySelector('.card-content')?.textContent || '',
+            genre: card.querySelector('.card-badge')?.textContent || ''
+        };
     }
 
-    // 开始多线路创作
-    function startMultiLineCreation() {
-        if (state.selectedCards.size === 0) return;
-
-        // 切换回单线模式
-        switchMode('single');
-
-        // 显示成功消息
-        const message = `太棒了！已为你创建了 ${state.selectedCards.size} 条创作线路。每条线路都会独立生成完整的故事。`;
-        addMessageToChat('assistant', message);
-
-        // TODO: 实际的创作逻辑
-        console.log('开始创作，选中的卡片：', Array.from(state.selectedCards.keys()));
+    // 更新槽位UI
+    function updateSlotUI(slotNumber, ideaData) {
+        const slot = document.querySelector(`.mini-slot[data-slot="${slotNumber}"]`);
+        if (!slot) return;
+        
+        slot.classList.remove('empty');
+        slot.classList.add('filled');
+        
+        slot.innerHTML = `
+            <div class="slot-icon">
+                <i class="fas fa-check"></i>
+            </div>
+            <div class="slot-text">
+                <div class="slot-label">槽位 ${slotNumber}</div>
+                <div class="slot-title">${ideaData.title}</div>
+            </div>
+            <button class="mini-slot-remove">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
     }
 
-    // 显示介绍
-    function showIntroduction() {
-        const overlay = document.createElement('div');
-        overlay.className = 'intro-overlay';
-        overlay.innerHTML = `
-            <div class="intro-modal">
-                <div class="intro-icon">
-                    <i class="fas fa-layer-group"></i>
-                </div>
-                <h2 class="intro-title">全新多线路创作模式</h2>
-                <p class="intro-desc">现在你可以同时选择多个创意，让AI帮你并行创作不同的故事线！</p>
-                
-                <div class="intro-features">
-                    <div class="intro-feature">
-                        <i class="fas fa-check-circle"></i>
-                        <span>最多选择3个不同的创意脑洞</span>
-                    </div>
-                    <div class="intro-feature">
-                        <i class="fas fa-check-circle"></i>
-                        <span>每个创意独立生成完整故事</span>
-                    </div>
-                    <div class="intro-feature">
-                        <i class="fas fa-check-circle"></i>
-                        <span>随时切换查看不同线路进度</span>
-                    </div>
-                </div>
-
-                <div class="intro-actions">
-                    <button class="btn-try-now">立即体验</button>
-                    <button class="btn-later">稍后再说</button>
-                </div>
+    // 重置槽位UI
+    function resetSlotUI(slotNumber) {
+        const slot = document.querySelector(`.mini-slot[data-slot="${slotNumber}"]`);
+        if (!slot) return;
+        
+        slot.classList.add('empty');
+        slot.classList.remove('filled');
+        
+        slot.innerHTML = `
+            <div class="slot-icon">
+                <i class="fas fa-plus"></i>
+            </div>
+            <div class="slot-text">
+                <div class="slot-label">槽位 ${slotNumber}</div>
+                <div class="slot-empty-text">点击选择创意</div>
             </div>
         `;
-        document.body.appendChild(overlay);
-
-        // 绑定按钮事件
-        overlay.querySelector('.btn-try-now').addEventListener('click', () => {
-            overlay.remove();
-            switchMode('multi');
-            localStorage.setItem('multiBrainHoleV3Used', 'true');
-        });
-
-        overlay.querySelector('.btn-later').addEventListener('click', () => {
-            overlay.remove();
-            localStorage.setItem('multiBrainHoleV3Used', 'true');
-        });
     }
 
-    // 显示提示
-    function showHint() {
-        const firstCard = document.querySelector('.idea-card');
-        if (firstCard) {
-            const hint = document.createElement('div');
-            hint.className = 'hint-bubble';
-            hint.textContent = '点击卡片选择创意';
-            hint.style.top = firstCard.offsetTop - 40 + 'px';
-            hint.style.left = firstCard.offsetLeft + firstCard.offsetWidth / 2 - 60 + 'px';
-            document.body.appendChild(hint);
-
-            setTimeout(() => hint.remove(), 3000);
-        }
-    }
-
-    // 显示达到上限消息
-    function showMaxSelectionMessage() {
-        addMessageToChat('assistant', '已选择3个创意，这是最大数量。如需更换，请先取消一个已选创意。');
-    }
-
-    // 更新聊天消息
-    function updateChatMessage(mode) {
-        if (mode === 'multi') {
-            addMessageToChat('assistant', '已切换到多线路模式！请选择1-3个你喜欢的创意，我会为每个创意生成独立的故事线。');
-        } else {
-            addMessageToChat('assistant', '已切换回单线模式。');
-        }
-    }
-
-    // 添加消息到聊天区
-    function addMessageToChat(role, text) {
-        const messages = document.querySelector('.chat-messages');
-        if (!messages) return;
-
-        // 移除正在输入提示
-        const typing = messages.querySelector('.typing-indicator');
-        if (typing) typing.style.display = 'none';
-
-        const message = document.createElement('div');
-        message.className = `message ${role}`;
+    // 更新卡片样式
+    function updateCardStyle(card, slotNumber) {
+        // 移除其他槽位样式
+        card.classList.remove('selected-slot-1', 'selected-slot-2', 'selected-slot-3');
+        // 添加当前槽位样式
+        card.classList.add(`selected-slot-${slotNumber}`);
         
-        const time = new Date().toLocaleTimeString('zh-CN', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-        });
-
-        if (role === 'assistant') {
-            message.innerHTML = `
-                <div class="message-avatar">
-                    <i class="fas fa-robot"></i>
-                </div>
-                <div class="message-content">
-                    <div class="message-bubble">${text}</div>
-                    <span class="message-time">${time}</span>
-                </div>
-            `;
-        } else {
-            message.innerHTML = `
-                <div class="message-content">
-                    <div class="message-bubble">${text}</div>
-                    <span class="message-time">${time}</span>
-                </div>
-            `;
+        // 添加角标
+        const existingIndicator = card.querySelector('.card-slot-indicator');
+        if (existingIndicator) {
+            existingIndicator.remove();
         }
+        
+        const indicator = document.createElement('div');
+        indicator.className = `card-slot-indicator slot-${slotNumber}`;
+        indicator.textContent = slotNumber;
+        card.appendChild(indicator);
+        
+        // 更新选择按钮
+        const selectBtn = card.querySelector('.btn-select');
+        if (selectBtn) {
+            selectBtn.innerHTML = `<i class="fas fa-check-circle"></i> 已选`;
+        }
+    }
 
-        messages.appendChild(message);
-        messages.scrollTop = messages.scrollHeight;
+    // 重置卡片样式
+    function resetCardStyle(card) {
+        card.classList.remove('selected-slot-1', 'selected-slot-2', 'selected-slot-3');
+        
+        const indicator = card.querySelector('.card-slot-indicator');
+        if (indicator) {
+            indicator.remove();
+        }
+        
+        const selectBtn = card.querySelector('.btn-select');
+        if (selectBtn) {
+            selectBtn.innerHTML = `<i class="fas fa-check"></i> 选择`;
+        }
+    }
+
+    // 更新槽位高亮
+    function updateSlotHighlight() {
+        document.querySelectorAll('.mini-slot').forEach(slot => {
+            const slotNumber = parseInt(slot.dataset.slot);
+            slot.classList.toggle('selecting', slotNumber === state.targetSlot);
+        });
+    }
+
+    // 显示选择提示
+    function showSelectionHint() {
+        const hint = document.querySelector('.selection-hint');
+        hint.classList.add('active');
+        
+        setTimeout(() => {
+            hint.classList.remove('active');
+        }, 3000);
+    }
+
+    // 隐藏选择提示
+    function hideSelectionHint() {
+        const hint = document.querySelector('.selection-hint');
+        hint.classList.remove('active');
+    }
+
+    // 更新按钮状态
+    function updateButtonStates() {
+        const count = state.selectedSlots.size;
+        
+        // 更新徽章
+        const badge = document.querySelector('.trigger-badge');
+        if (count > 0) {
+            badge.style.display = 'flex';
+            badge.textContent = count;
+        } else {
+            badge.style.display = 'none';
+        }
+        
+        // 更新开始按钮
+        const startBtn = document.getElementById('btn-start-creation');
+        startBtn.disabled = count === 0;
+    }
+
+    // 清空所有
+    function clearAll() {
+        for (let i = 1; i <= CONFIG.MAX_SLOTS; i++) {
+            removeFromSlot(i);
+        }
+        showMessage('已重置所有选择');
+    }
+
+    // 开始创作
+    function startCreation() {
+        const count = state.selectedSlots.size;
+        if (count === 0) return;
+        
+        closeMultiMode();
+        showMessage(`已创建${count}条创作线路，开始创作！`);
+        
+        // TODO: 实际的创作逻辑
+    }
+
+    // 查找创意所在槽位
+    function findIdeaSlot(ideaId) {
+        return state.selectedSlots.get(ideaId) || null;
+    }
+
+    // 查找空槽位
+    function findEmptySlot() {
+        for (let i = 1; i <= CONFIG.MAX_SLOTS; i++) {
+            if (![...state.selectedSlots.values()].includes(i)) {
+                return i;
+            }
+        }
+        return null;
+    }
+
+    // 显示消息
+    function showMessage(text) {
+        // 使用现有的聊天消息系统
+        if (typeof addMessageToChat === 'function') {
+            addMessageToChat('assistant', text);
+        } else {
+            console.log(text);
+        }
+    }
+
+    // 保存状态
+    function saveState() {
+        localStorage.setItem('multiBrainHoleV3State', JSON.stringify({
+            selectedSlots: Array.from(state.selectedSlots.entries()),
+            lines: state.lines
+        }));
+    }
+
+    // 恢复状态
+    function restoreState() {
+        const saved = localStorage.getItem('multiBrainHoleV3State');
+        if (!saved) return;
+        
+        try {
+            const data = JSON.parse(saved);
+            state.selectedSlots = new Map(data.selectedSlots || []);
+            state.lines = data.lines || {};
+            
+            // 恢复UI
+            state.selectedSlots.forEach((slotNumber, ideaId) => {
+                const card = document.querySelector(`.idea-card[data-id="${ideaId}"]`);
+                if (card && state.lines[`line${slotNumber}`]) {
+                    updateSlotUI(slotNumber, state.lines[`line${slotNumber}`].idea);
+                    updateCardStyle(card, slotNumber);
+                }
+            });
+            
+            updateButtonStates();
+        } catch (e) {
+            console.error('恢复状态失败:', e);
+        }
     }
 
     // 导出API
-    window.initMultiBrainHoleV3 = init;
+    window.MultiBrainHoleV3 = {
+        init,
+        toggleMultiMode,
+        clearAll,
+        startCreation
+    };
 
     // 自动初始化
     if (document.readyState === 'loading') {
