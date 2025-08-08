@@ -1,32 +1,32 @@
 /* 全局样式 */
 :root {
-    /* 主题色 */
-    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --primary-color: #667eea;
-    --secondary-color: #764ba2;
+    /* 主题色 - 蓝白色调 */
+    --primary-gradient: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+    --primary-color: #3b82f6;
+    --secondary-color: #60a5fa;
     
-    /* 暗色主题 */
-    --dark-bg: #0d1117;
-    --dark-card: rgba(22, 27, 34, 0.95);
-    --dark-border: #30363d;
+    /* 明亮主题 */
+    --dark-bg: #f8fafc;
+    --dark-card: rgba(255, 255, 255, 0.95);
+    --dark-border: #e2e8f0;
     
     /* 文字颜色 */
-    --text-primary: #e6edf3;
-    --text-secondary: #8b949e;
-    --text-muted: #6e7681;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --text-muted: #94a3b8;
     
     /* 功能色 */
-    --accent: #58a6ff;
-    --success: #56d364;
-    --warning: #f0ad4e;
-    --danger: #dc3545;
+    --accent: #0ea5e9;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
     
     /* 徽章颜色 */
-    --badge-scifi: #00d4ff;
-    --badge-mystery: #9b59b6;
-    --badge-romance: #e91e63;
-    --badge-fantasy: #ff6b6b;
-    --badge-thriller: #f39c12;
+    --badge-scifi: #06b6d4;
+    --badge-mystery: #8b5cf6;
+    --badge-romance: #ec4899;
+    --badge-fantasy: #f97316;
+    --badge-thriller: #eab308;
 }
 
 * {
@@ -44,9 +44,9 @@ body {
 
 /* 极简导航栏 */
 .navbar-flat {
-    background: linear-gradient(90deg, rgba(102, 126, 234, 0.03) 0%, rgba(118, 75, 162, 0.03) 100%);
+    background: linear-gradient(90deg, rgba(59, 130, 246, 0.05) 0%, rgba(96, 165, 250, 0.05) 100%);
     backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(102, 126, 234, 0.1);
+    border-bottom: 1px solid rgba(59, 130, 246, 0.15);
     position: sticky;
     top: 0;
     z-index: 1000;
@@ -73,7 +73,7 @@ body {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
 
 .nav-logo i {
@@ -87,7 +87,7 @@ body {
     display: flex;
     align-items: center;
     gap: 0;
-    background: rgba(22, 27, 34, 0.5);
+    background: rgba(226, 232, 240, 0.5);
     border-radius: 20px;
     padding: 0;
     height: 28px;
@@ -177,7 +177,7 @@ body {
 }
 
 .nav-icon-btn:hover {
-    background: rgba(102, 126, 234, 0.1);
+    background: rgba(59, 130, 246, 0.1);
     color: var(--primary-color);
 }
 
@@ -294,7 +294,7 @@ body {
 .step.active .step-circle {
     background: var(--primary-gradient);
     border-color: var(--primary-color);
-    box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
 }
 
 .step span {
@@ -324,6 +324,7 @@ body {
     border-radius: 12px;
     padding: 1.5rem;
     border: 1px solid var(--dark-border);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 /* 时间轴导航 */
@@ -370,7 +371,7 @@ body {
     height: 24px;
     border-color: var(--primary-color);
     background: var(--primary-gradient);
-    box-shadow: 0 0 15px rgba(102, 126, 234, 0.6);
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
 }
 
 .timeline-item span {
@@ -397,17 +398,17 @@ body {
 }
 
 .waterfall-container::-webkit-scrollbar-track {
-    background: var(--dark-bg);
+    background: #f1f5f9;
     border-radius: 4px;
 }
 
 .waterfall-container::-webkit-scrollbar-thumb {
-    background: var(--dark-border);
+    background: #cbd5e1;
     border-radius: 4px;
 }
 
 .waterfall-container::-webkit-scrollbar-thumb:hover {
-    background: var(--text-muted);
+    background: #94a3b8;
 }
 
 .waterfall-grid {
@@ -432,8 +433,8 @@ body {
 
 /* 创意卡片 */
 .idea-card {
-    background: var(--dark-bg);
-    border: 1px solid var(--dark-border);
+    background: white;
+    border: 1px solid #e2e8f0;
     border-radius: 12px;
     padding: 1.25rem;
     transition: all 0.3s ease;
@@ -444,6 +445,7 @@ body {
     min-height: 280px;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .idea-card:nth-child(1) { animation-delay: 0.1s; }
@@ -465,14 +467,15 @@ body {
 
 .idea-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 10px 30px rgba(59, 130, 246, 0.2);
     border-color: var(--primary-color);
 }
 
 .idea-card.selected {
     border-color: var(--primary-color);
-    box-shadow: 0 0 30px rgba(102, 126, 234, 0.5);
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.3);
     transform: scale(1.02);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(96, 165, 250, 0.03) 100%);
 }
 
 .card-header {
@@ -492,8 +495,8 @@ body {
 .btn-edit {
     width: 28px;
     height: 28px;
-    background: transparent;
-    border: 1px solid var(--dark-border);
+    background: white;
+    border: 1px solid #e2e8f0;
     border-radius: 6px;
     color: var(--text-secondary);
     cursor: pointer;
@@ -512,12 +515,12 @@ body {
 
 .idea-card.editing {
     border-color: var(--primary-color);
-    box-shadow: 0 0 20px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
 }
 
 .idea-card.editing .card-title,
 .idea-card.editing .card-content {
-    background: rgba(102, 126, 234, 0.05);
+    background: rgba(59, 130, 246, 0.05);
     padding: 0.5rem;
     border-radius: 4px;
     outline: none;
@@ -559,33 +562,32 @@ body {
 }
 
 .badge-scifi {
-    background: rgba(0, 212, 255, 0.2);
+    background: rgba(6, 182, 212, 0.1);
     color: var(--badge-scifi);
     border: 1px solid var(--badge-scifi);
 }
 
 .badge-mystery {
-    background: rgba(155, 89, 182, 0.2);
+    background: rgba(139, 92, 246, 0.1);
     color: var(--badge-mystery);
     border: 1px solid var(--badge-mystery);
 }
 
 .badge-romance {
-    background: rgba(233, 30, 99, 0.2);
+    background: rgba(236, 72, 153, 0.1);
     color: var(--badge-romance);
     border: 1px solid var(--badge-romance);
 }
 
 .badge-fantasy {
-    background: rgba(255, 107, 107, 0.2);
+    background: rgba(249, 115, 22, 0.1);
     color: var(--badge-fantasy);
     border: 1px solid var(--badge-fantasy);
 }
 
 .badge-thriller {
-    background: rgba(243, 156, 18, 0.2);
+    background: rgba(234, 179, 8, 0.1);
     color: var(--badge-thriller);
-    border: 1px solid var(--badge-thriller);
 }
 
 
@@ -639,14 +641,14 @@ body {
 
 .btn-select:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
 }
 
 .btn-favorite {
     width: 36px;
     height: 36px;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(59, 130, 246, 0.05);
+    border: 1px solid rgba(59, 130, 246, 0.2);
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -710,21 +712,22 @@ body {
 
 /* 右侧对话区 */
 .chat-area {
-    background: var(--dark-card);
+    background: white;
     border-radius: 12px;
-    border: 1px solid var(--dark-border);
+    border: 1px solid #e2e8f0;
     display: flex;
     flex-direction: column;
     height: calc(100vh - 80px);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .chat-header {
     padding: 0.6rem 1rem;
-    border-bottom: 1px solid var(--dark-border);
+    border-bottom: 1px solid #e2e8f0;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: linear-gradient(90deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+    background: linear-gradient(90deg, rgba(59, 130, 246, 0.05) 0%, rgba(96, 165, 250, 0.05) 100%);
 }
 
 .assistant-info {
@@ -773,8 +776,8 @@ body {
 .btn-clear-chat {
     width: 28px;
     height: 28px;
-    background: transparent;
-    border: 1px solid var(--dark-border);
+    background: white;
+    border: 1px solid #e2e8f0;
     border-radius: 6px;
     color: var(--text-secondary);
     cursor: pointer;
@@ -783,8 +786,9 @@ body {
 }
 
 .btn-clear-chat:hover {
-    background: var(--dark-bg);
+    background: #f1f5f9;
     color: var(--text-primary);
+    border-color: var(--primary-color);
 }
 
 /* 聊天消息区域 */
@@ -806,7 +810,7 @@ body {
 }
 
 .chat-messages::-webkit-scrollbar-thumb {
-    background: var(--dark-border);
+    background: #cbd5e1;
     border-radius: 3px;
 }
 
@@ -834,7 +838,7 @@ body {
 .message-avatar {
     width: 36px;
     height: 36px;
-    background: var(--dark-bg);
+    background: #f1f5f9;
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -851,11 +855,12 @@ body {
 }
 
 .message-bubble {
-    background: var(--dark-bg);
+    background: #f1f5f9;
     padding: 0.75rem 1rem;
     border-radius: 12px;
     font-size: 0.875rem;
     line-height: 1.6;
+    border: 1px solid #e2e8f0;
 }
 
 .message.user .message-bubble {
@@ -875,9 +880,10 @@ body {
     display: flex;
     gap: 4px;
     padding: 0.75rem 1rem;
-    background: var(--dark-bg);
+    background: #f1f5f9;
     border-radius: 12px;
     width: fit-content;
+    border: 1px solid #e2e8f0;
 }
 
 .typing-indicator span {
@@ -908,19 +914,20 @@ body {
 /* 快速建议 */
 .quick-suggestions {
     padding: 0.5rem 1rem;
-    border-top: 1px solid var(--dark-border);
+    border-top: 1px solid #e2e8f0;
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 0.5rem;
     flex-wrap: nowrap;
+    background: rgba(59, 130, 246, 0.02);
 }
 
 .suggestion-chip {
     flex: 1;
     padding: 0.35rem 0.5rem;
-    background: var(--dark-bg);
-    border: 1px solid var(--dark-border);
+    background: white;
+    border: 1px solid #e2e8f0;
     border-radius: 16px;
     color: var(--text-secondary);
     font-size: 0.7rem;
@@ -950,10 +957,11 @@ body {
 /* 输入区域 */
 .chat-input {
     padding: 1rem;
-    border-top: 1px solid var(--dark-border);
+    border-top: 1px solid #e2e8f0;
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    background: #fafbfc;
 }
 
 .btn-attachment,
@@ -978,8 +986,8 @@ body {
 .input-message {
     flex: 1;
     padding: 0.75rem 1rem;
-    background: var(--dark-bg);
-    border: 1px solid var(--dark-border);
+    background: white;
+    border: 1px solid #e2e8f0;
     border-radius: 8px;
     color: var(--text-primary);
     font-size: 0.875rem;
@@ -1011,7 +1019,7 @@ body {
 
 .btn-send:hover {
     transform: scale(1.1);
-    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
 }
 
 /* 移动端适配 */
@@ -1028,7 +1036,7 @@ body {
     color: white;
     font-size: 1.5rem;
     cursor: pointer;
-    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 5px 20px rgba(59, 130, 246, 0.3);
     z-index: 999;
     transition: all 0.3s ease;
 }
