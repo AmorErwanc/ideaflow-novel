@@ -525,7 +525,7 @@
     function createBottomBar() {
         const bar = document.createElement('div');
         bar.className = 'multi-brain-bar';
-        bar.style.display = 'none';  // 确保初始状态隐藏
+        // 不设置display:none，通过CSS的transform控制显示隐藏
         bar.innerHTML = `
             <div class="bar-header">
                 <div class="bar-title">
@@ -730,21 +730,16 @@
         trigger.classList.toggle('active', state.enabled);
         
         if (state.enabled) {
-            bar.style.display = 'block';
-            // 使用setTimeout确保display改变后动画生效
+            // 直接添加active类，通过CSS的transform控制显示
+            bar.classList.add('active');
+            // 调整聊天区域布局以避免冲突
             setTimeout(() => {
-                bar.classList.add('active');
-                // 调整聊天区域布局以避免冲突
                 adjustChatAreaForBottomBar(true);
-            }, 10);
+            }, 100);
         } else {
             bar.classList.remove('active');
             // 立即重置聊天区域布局
             adjustChatAreaForBottomBar(false);
-            // 等待动画完成后隐藏
-            setTimeout(() => {
-                bar.style.display = 'none';
-            }, 400);
         }
         
         cards.forEach(card => {
@@ -772,11 +767,6 @@
             
             // 立即重置聊天区域布局
             adjustChatAreaForBottomBar(false);
-            
-            // 等待动画完成后隐藏
-            setTimeout(() => {
-                bar.style.display = 'none';
-            }, 400);
             
             cards.forEach(card => {
                 card.classList.remove('selection-mode');
