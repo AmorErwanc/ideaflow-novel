@@ -69,7 +69,7 @@
                 cursor: pointer;
                 box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
                 transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                z-index: 48;  /* 设置合理的z-index，确保可见但不遮挡输入框 */
+                z-index: 1000;  /* 提高z-index确保浮动按钮始终在最上层 */
                 border: none;
                 color: white;
                 font-size: 20px;  /* 调整图标大小 */
@@ -112,7 +112,7 @@
                 box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
                 transform: translateY(100%);
                 transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-                z-index: 45;  /* 设置合理的z-index，低于聊天区域和输入框 */
+                z-index: 999;  /* 提高z-index但略低于浮动按钮 */
                 padding-bottom: 80px;  /* 添加底部padding，避免覆盖聊天区域的输入框 */
             }
 
