@@ -69,7 +69,7 @@
                 cursor: pointer;
                 box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
                 transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                z-index: 90;  /* 降低z-index，避免遮挡其他元素 */
+                z-index: 40;  /* 降低z-index，避免遮挡其他元素 */
                 border: none;
                 color: white;
                 font-size: 20px;  /* 调整图标大小 */
@@ -112,7 +112,7 @@
                 box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
                 transform: translateY(100%);
                 transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-                z-index: 98;  /* 设置合理的z-index，低于输入框 */
+                z-index: 30;  /* 大幅降低z-index，确保不会遮挡输入框(z-index:100) */
             }
 
             .multi-brain-bar.active {
@@ -381,7 +381,7 @@
                 opacity: 0;
                 visibility: hidden;
                 transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-                z-index: 100;
+                z-index: 55;  /* 降低z-index，避免遮挡输入框 */
             }
 
             .selection-hint.active {
@@ -502,7 +502,7 @@
                 }
                 
                 .multi-brain-bar {
-                    z-index: 95;  /* 移动端进一步降低z-index */
+                    z-index: 25;  /* 移动端更低的z-index，确保输入框优先级 */
                 }
             }
         `;
@@ -670,6 +670,52 @@
         
         // 开始创作按钮
         document.getElementById('btn-start-creation').addEventListener('click', startCreation);
+        
+        // 窗口尺寸变化监听器 - 处理页面缩放和resize
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            // 防抖处理，避免频繁触发
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                if (state.enabled) {
+                    console.log('[多脑洞V3] 窗口尺寸变化，重新调整布局');
+                    adjustChatAreaForBottomBar(true);
+                }
+            }, 150);
+        });
+    }
+
+    // 动态调整聊天区域布局以避免与底部栏冲突
+    function adjustChatAreaForBottomBar(isVisible) {
+        const chatArea = document.querySelector('.chat-area');
+        const bottomBar = document.querySelector('.multi-brain-bar');
+        
+        if (!chatArea) return;
+        
+        if (isVisible && bottomBar) {
+            // 等待底部栏动画完成后获取高度，增加延迟确保准确
+            setTimeout(() => {
+                const barHeight = bottomBar.offsetHeight;
+                const safeMargin = 20; // 增加安全边距
+                
+                // 使用更强健的高度计算方式
+                const newHeight = `calc(100vh - 80px - ${barHeight + safeMargin}px)`;
+                chatArea.style.height = newHeight;
+                
+                // 同时给聊天区域添加下边距作为双重保护
+                chatArea.style.marginBottom = `${safeMargin}px`;
+                
+                console.log('[多脑洞V3] 调整聊天区域 - 高度:', newHeight, '底部栏高度:', barHeight);
+                
+                // 强制触发重新布局
+                chatArea.offsetHeight; // 触发reflow
+            }, 100); // 增加延迟时间
+        } else {
+            // 恢复原始样式
+            chatArea.style.height = 'calc(100vh - 80px)';
+            chatArea.style.marginBottom = '';
+            console.log('[多脑洞V3] 恢复聊天区域原始样式');
+        }
     }
 
     // 切换多选模式
@@ -687,9 +733,13 @@
             // 使用setTimeout确保display改变后动画生效
             setTimeout(() => {
                 bar.classList.add('active');
+                // 调整聊天区域布局以避免冲突
+                adjustChatAreaForBottomBar(true);
             }, 10);
         } else {
             bar.classList.remove('active');
+            // 立即重置聊天区域布局
+            adjustChatAreaForBottomBar(false);
             // 等待动画完成后隐藏
             setTimeout(() => {
                 bar.style.display = 'none';
@@ -718,6 +768,9 @@
             
             trigger.classList.remove('active');
             bar.classList.remove('active');
+            
+            // 立即重置聊天区域布局
+            adjustChatAreaForBottomBar(false);
             
             // 等待动画完成后隐藏
             setTimeout(() => {
