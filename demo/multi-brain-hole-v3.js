@@ -69,10 +69,10 @@
                 cursor: pointer;
                 box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
                 transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                z-index: 999;  /* 提高z-index但不超过底部栏 */
+                z-index: 90;  /* 降低z-index，避免遮挡其他元素 */
                 border: none;
                 color: white;
-                font-size: 24px;
+                font-size: 20px;  /* 调整图标大小 */
             }
 
             .multi-brain-trigger:hover {
@@ -87,17 +87,17 @@
 
             .trigger-badge {
                 position: absolute;
-                top: -4px;
-                right: -4px;
+                top: -2px;
+                right: -2px;
                 background: #ef4444;
                 color: white;
-                width: 20px;
-                height: 20px;
+                width: 18px;
+                height: 18px;
                 border-radius: 50%;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 11px;
+                font-size: 10px;
                 font-weight: 700;
                 border: 2px solid white;
             }
@@ -112,7 +112,7 @@
                 box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
                 transform: translateY(100%);
                 transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-                z-index: 1000;
+                z-index: 98;  /* 设置合理的z-index，低于输入框 */
             }
 
             .multi-brain-bar.active {
@@ -471,6 +471,14 @@
 
             /* 响应式 */
             @media (max-width: 768px) {
+                .multi-brain-trigger {
+                    bottom: 70px;  /* 移动端位置调整 */
+                    right: 16px;
+                    width: 44px;
+                    height: 44px;
+                    font-size: 18px;
+                }
+                
                 .selected-slots {
                     flex-direction: column;
                 }
@@ -491,6 +499,10 @@
                 .bar-btn {
                     flex: 1;
                     justify-content: center;
+                }
+                
+                .multi-brain-bar {
+                    z-index: 95;  /* 移动端进一步降低z-index */
                 }
             }
         `;
