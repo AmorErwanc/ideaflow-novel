@@ -29,7 +29,16 @@
       "mcp__chrome-mcp-server__chrome_navigate",
       "mcp__chrome-mcp-server__chrome_screenshot",
       "mcp__chrome-mcp-server__chrome_get_web_content",
-      "mcp__chrome-mcp-server__chrome_get_interactive_elements"
+      "mcp__chrome-mcp-server__chrome_get_interactive_elements",
+      "mcp__serena__search_for_pattern",
+      "mcp__serena__activate_project",
+      "mcp__serena__find_symbol",
+      "mcp__zen__analyze",
+      "mcp__serena__replace_regex",
+      "Bash(open index.html)",
+      "mcp__serena__replace_symbol_body",
+      "mcp__serena__list_dir",
+      "Bash(open:*)"
     ],
     "deny": []
   }

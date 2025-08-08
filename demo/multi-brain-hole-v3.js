@@ -57,7 +57,7 @@
             /* 浮动触发按钮 */
             .multi-brain-trigger {
                 position: fixed;
-                bottom: 100px;  /* 进一步提高位置，完全避开输入框区域 */
+                bottom: 120px;  /* 提高位置，完全避开输入框和智能建议区域 */
                 right: 32px;  /* 稍微右移 */
                 width: 48px;  /* 减小尺寸 */
                 height: 48px;
@@ -69,7 +69,7 @@
                 cursor: pointer;
                 box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
                 transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                z-index: 40;  /* 降低z-index，避免遮挡其他元素 */
+                z-index: 48;  /* 设置合理的z-index，确保可见但不遮挡输入框 */
                 border: none;
                 color: white;
                 font-size: 20px;  /* 调整图标大小 */
@@ -112,7 +112,8 @@
                 box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
                 transform: translateY(100%);
                 transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-                z-index: 30;  /* 大幅降低z-index，确保不会遮挡输入框(z-index:100) */
+                z-index: 45;  /* 设置合理的z-index，低于聊天区域和输入框 */
+                padding-bottom: 80px;  /* 添加底部padding，避免覆盖聊天区域的输入框 */
             }
 
             .multi-brain-bar.active {
