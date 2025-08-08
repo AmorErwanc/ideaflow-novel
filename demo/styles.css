@@ -313,7 +313,7 @@ body {
     margin: 1rem auto;
     padding: 0 2rem;
     display: grid;
-    grid-template-columns: 72% 28%;
+    grid-template-columns: 1fr 380px;  /* 固定右侧宽度，左侧自适应 */
     gap: 1.5rem;
     min-height: calc(100vh - 80px);
 }
@@ -414,8 +414,8 @@ body {
 
 .waterfall-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));  /* 调整最小宽度，使用auto-fit */
+    gap: 1rem;  /* 减小间距 */
     animation: fadeIn 0.5s ease;
     align-items: start;
     grid-auto-rows: min-content;
@@ -443,7 +443,7 @@ body {
     animation: cardEntry 0.5s ease backwards;
     display: flex;
     flex-direction: column;
-    min-height: 280px;
+    min-height: 260px;  /* 稍微减小最小高度 */
     position: relative;
     overflow: hidden;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
@@ -1636,45 +1636,130 @@ body {
 }
 
 /* 响应式设计 */
+@media (max-width: 1440px) {
+    .main-container {
+        grid-template-columns: 1fr 360px;
+        padding: 0 1.5rem;
+    }
+}
+
 @media (max-width: 1280px) {
     .main-container {
-        grid-template-columns: 65% 35%;
+        grid-template-columns: 1fr 340px;
+        padding: 0 1.25rem;
+        gap: 1.25rem;
+    }
+    
+    .waterfall-grid {
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     }
 }
 
 @media (max-width: 1024px) {
     .main-container {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 320px;  /* 保持两栏，但缩小右侧 */
         gap: 1rem;
+        padding: 0 1rem;
     }
     
     .chat-area {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 0;
-        transition: height 0.3s ease;
-        z-index: 998;
-        border-radius: 20px 20px 0 0;
-    }
-    
-    .chat-area.active {
-        height: 60vh;
-    }
-    
-    .mobile-chat-toggle {
-        display: flex;
+        height: 100%;
+        position: sticky;
+        top: 50px;
     }
     
     .waterfall-grid {
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 0.875rem;
+    }
+    
+    .idea-card {
+        padding: 1rem;
+        min-height: 250px;
+    }
+    
+    .smart-suggestions {
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .suggestion-chips {
+        gap: 0.35rem;
+    }
+    
+    .suggestion-chip {
+        padding: 0.3rem 0.4rem;
+        font-size: 0.65rem;
+    }
+}
+
+@media (max-width: 860px) {
+    .main-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .chat-area {
+        display: none;  /* 小屏幕默认隐藏聊天区 */
+    }
+    
+    .waterfall-grid {
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 0.875rem;
+    }
+    
+    .idea-card {
+        padding: 1rem;
+        min-height: 240px;
+    }
+}
+
+@media (max-width: 640px) {
+    .main-container {
+        padding: 0 0.75rem;
+        margin: 0.5rem auto;
+    }
+    
+    .display-area {
+        border-radius: 8px;
+        padding: 0.75rem;
+    }
+    
+    .waterfall-container {
+        height: calc(100vh - 100px);
+        padding-right: 0.25rem;
+    }
+    
+    .waterfall-grid {
+        grid-template-columns: 1fr;
+        gap: 0.625rem;
+    }
+    
+    .idea-card {
+        min-height: auto;
+        padding: 0.75rem;
+    }
+    
+    .card-badge {
+        font-size: 0.65rem;
+        padding: 0.2rem 0.5rem;
+    }
+    
+    .btn-select, .btn-favorite {
+        height: 32px;
+        font-size: 0.75rem;
     }
 }
 
 @media (max-width: 768px) {
     .nav-menu {
         display: none;
+    }
+    
+    .navbar-flat {
+        padding: 0 1rem;
+    }
+    
+    .nav-progress {
+        max-width: 280px;
     }
     
     .progress-steps {
@@ -1689,10 +1774,29 @@ body {
     
     .waterfall-grid {
         grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+    
+    .idea-card {
+        min-height: auto;
+        padding: 0.875rem;
+    }
+    
+    .card-title {
+        font-size: 1rem;
+    }
+    
+    .card-content {
+        font-size: 0.8125rem;
+        -webkit-line-clamp: 3;
     }
     
     .timeline-nav {
         overflow-x: auto;
         padding-bottom: 0.5rem;
+    }
+    
+    .display-area {
+        padding: 1rem;
     }
 }
