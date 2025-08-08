@@ -1,981 +1,1037 @@
-// 多脑洞并行生成 V2 - 更优雅的实现
+// 多脑洞并行生成 V2 - 优化版本
+// 采用标签页模式，提供更好的用户体验
 
-const MultiBrainHoleV2 = {
+(function() {
+    'use strict';
+
+    // 配置
+    const CONFIG = {
+        MAX_SLOTS: 3,
+        ANIMATION_DURATION: 300,
+        COLORS: {
+            slot1: { primary: '#8B5CF6', light: '#EDE9FE', dark: '#6D28D9', name: '紫色' },
+            slot2: { primary: '#3B82F6', light: '#DBEAFE', dark: '#1E40AF', name: '蓝色' },
+            slot3: { primary: '#10B981', light: '#D1FAE5', dark: '#047857', name: '绿色' }
+        }
+    };
+
     // 状态管理
-    state: {
-        slots: {
-            1: null,
-            2: null,
-            3: null
-        },
+    const state = {
+        mode: 'single', // single | multi
+        selectedSlots: new Map(), // ideaId -> slotNumber
+        lines: {},
         currentLine: 1,
-        maxSlots: 3
-    },
-    
-    // 颜色配置
-    colors: {
-        1: { primary: '#8b5cf6', name: '紫色', emoji: '🟣' },
-        2: { primary: '#3b82f6', name: '蓝色', emoji: '🔵' },
-        3: { primary: '#10b981', name: '绿色', emoji: '🟢' }
-    },
-    
+        isGuideShown: false
+    };
+
     // 初始化
-    init() {
-        this.enhanceCards();
-        this.createFloatingBar();
-        this.enhanceNavbar();
-        this.loadState();
-        this.showGuide();
-    },
-    
-    // 增强卡片功能
-    enhanceCards() {
-        const cards = document.querySelectorAll('.idea-card');
+    function init() {
+        injectStyles();
+        injectModeSelector();
+        enhanceInterface();
+        bindEvents();
+        restoreState();
         
-        cards.forEach(card => {
-            // 添加槽位标记
-            const slotBadge = document.createElement('div');
-            slotBadge.className = 'card-slot-badge';
-            slotBadge.style.display = 'none';
-            card.querySelector('.card-header').appendChild(slotBadge);
-            
-            // 替换选择按钮逻辑
-            const selectBtn = card.querySelector('.btn-select');
-            const newBtn = selectBtn.cloneNode(true);
-            selectBtn.parentNode.replaceChild(newBtn, selectBtn);
-            
-            // 新的点击逻辑
-            newBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.handleCardSelect(card);
-            });
-            
-            // 添加长按菜单
-            let pressTimer;
-            newBtn.addEventListener('mousedown', (e) => {
-                pressTimer = setTimeout(() => {
-                    this.showSlotMenu(card, e);
-                }, 500);
-            });
-            
-            newBtn.addEventListener('mouseup', () => {
-                clearTimeout(pressTimer);
-            });
-            
-            newBtn.addEventListener('mouseleave', () => {
-                clearTimeout(pressTimer);
-            });
-        });
-    },
-    
-    // 处理卡片选择
-    handleCardSelect(card) {
-        const cardId = card.dataset.id;
-        const currentSlot = this.getCardSlot(cardId);
-        
-        if (currentSlot) {
-            // 已选中，取消选择
-            this.removeFromSlot(currentSlot);
-        } else {
-            // 未选中，分配到下一个空槽
-            const emptySlot = this.findNextEmptySlot();
-            if (emptySlot) {
-                this.assignToSlot(card, emptySlot);
-            } else {
-                this.showReplaceDialog(card);
-            }
+        // 首次使用显示引导
+        if (!localStorage.getItem('multiBrainHoleGuideShown')) {
+            setTimeout(() => showGuide(), 1000);
         }
-    },
-    
-    // 显示槽位选择菜单
-    showSlotMenu(card, event) {
-        // 移除已存在的菜单
-        document.querySelector('.slot-menu')?.remove();
-        
-        const menu = document.createElement('div');
-        menu.className = 'slot-menu';
-        menu.innerHTML = `
-            <div class="slot-menu-title">选择槽位</div>
-            <div class="slot-menu-options">
-                ${[1, 2, 3].map(slot => {
-                    const color = this.colors[slot];
-                    const occupied = this.state.slots[slot];
-                    return `
-                        <button class="slot-menu-option" data-slot="${slot}" ${occupied && occupied.id !== card.dataset.id ? 'disabled' : ''}>
-                            <span class="slot-menu-color" style="background: ${color.primary}"></span>
-                            <span class="slot-menu-label">
-                                槽位 ${slot}
-                                ${occupied ? `<small>${occupied.id === card.dataset.id ? '(当前)' : '(已占用)'}</small>` : ''}
-                            </span>
-                        </button>
-                    `;
-                }).join('')}
-                <button class="slot-menu-option" data-slot="0">
-                    <span class="slot-menu-color" style="background: #94a3b8"></span>
-                    <span class="slot-menu-label">取消选择</span>
-                </button>
-            </div>
-        `;
-        
-        // 定位菜单
-        menu.style.position = 'absolute';
-        menu.style.left = event.pageX + 'px';
-        menu.style.top = event.pageY + 'px';
-        
-        document.body.appendChild(menu);
-        
-        // 添加事件
-        menu.querySelectorAll('.slot-menu-option').forEach(option => {
-            option.addEventListener('click', () => {
-                const slot = parseInt(option.dataset.slot);
-                if (slot === 0) {
-                    const currentSlot = this.getCardSlot(card.dataset.id);
-                    if (currentSlot) {
-                        this.removeFromSlot(currentSlot);
-                    }
-                } else if (!option.disabled) {
-                    this.assignToSlot(card, slot);
+    }
+
+    // 注入样式
+    function injectStyles() {
+        const style = document.createElement('style');
+        style.textContent = `
+            /* 模式选择器 */
+            .mode-selector {
+                position: fixed;
+                top: 80px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(255, 255, 255, 0.98);
+                backdrop-filter: blur(10px);
+                border-radius: 12px;
+                padding: 6px;
+                display: flex;
+                gap: 4px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+                z-index: 100;
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            }
+
+            .mode-btn {
+                padding: 8px 20px;
+                border: none;
+                background: transparent;
+                border-radius: 8px;
+                font-size: 14px;
+                font-weight: 500;
+                color: #64748b;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                position: relative;
+            }
+
+            .mode-btn:hover {
+                color: #1e293b;
+            }
+
+            .mode-btn.active {
+                background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+                color: white;
+                box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+            }
+
+            .mode-btn .badge {
+                position: absolute;
+                top: -4px;
+                right: -4px;
+                background: #ef4444;
+                color: white;
+                font-size: 10px;
+                padding: 2px 6px;
+                border-radius: 10px;
+                font-weight: 600;
+            }
+
+            /* 多选模式覆盖层 */
+            .multi-select-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.4);
+                backdrop-filter: blur(4px);
+                z-index: 50;
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s ease;
+            }
+
+            .multi-select-overlay.active {
+                opacity: 1;
+                visibility: visible;
+            }
+
+            /* 选择面板 */
+            .selection-panel {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) scale(0.9);
+                width: 90%;
+                max-width: 1200px;
+                max-height: 85vh;
+                background: white;
+                border-radius: 20px;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s ease;
+                z-index: 101;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .selection-panel.active {
+                opacity: 1;
+                visibility: visible;
+                transform: translate(-50%, -50%) scale(1);
+            }
+
+            .panel-header {
+                padding: 24px 32px;
+                border-bottom: 1px solid #e2e8f0;
+                background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+                border-radius: 20px 20px 0 0;
+            }
+
+            .panel-title {
+                font-size: 24px;
+                font-weight: 700;
+                color: #1e293b;
+                margin: 0 0 8px 0;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+
+            .panel-subtitle {
+                color: #64748b;
+                font-size: 14px;
+            }
+
+            .panel-close {
+                position: absolute;
+                top: 24px;
+                right: 24px;
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                background: white;
+                border: none;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            .panel-close:hover {
+                transform: rotate(90deg);
+                background: #f1f5f9;
+            }
+
+            .panel-body {
+                display: flex;
+                flex: 1;
+                overflow: hidden;
+            }
+
+            /* 槽位区域 */
+            .slots-section {
+                width: 340px;
+                padding: 24px;
+                background: #f8fafc;
+                border-right: 1px solid #e2e8f0;
+            }
+
+            .slots-title {
+                font-size: 12px;
+                font-weight: 600;
+                text-transform: uppercase;
+                color: #94a3b8;
+                margin-bottom: 16px;
+                letter-spacing: 0.5px;
+            }
+
+            .slot-cards {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .slot-card {
+                background: white;
+                border-radius: 12px;
+                padding: 16px;
+                border: 2px dashed #cbd5e1;
+                transition: all 0.3s ease;
+                position: relative;
+                min-height: 100px;
+            }
+
+            .slot-card.empty {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+            }
+
+            .slot-card.empty:hover {
+                border-color: #3b82f6;
+                background: #f0f9ff;
+            }
+
+            .slot-card.filled {
+                border-style: solid;
+                padding-top: 24px;
+            }
+
+            .slot-card.slot-1.filled {
+                border-color: #8B5CF6;
+                background: linear-gradient(135deg, #EDE9FE 0%, white 100%);
+            }
+
+            .slot-card.slot-2.filled {
+                border-color: #3B82F6;
+                background: linear-gradient(135deg, #DBEAFE 0%, white 100%);
+            }
+
+            .slot-card.slot-3.filled {
+                border-color: #10B981;
+                background: linear-gradient(135deg, #D1FAE5 0%, white 100%);
+            }
+
+            .slot-number {
+                position: absolute;
+                top: -10px;
+                left: 16px;
+                background: white;
+                padding: 4px 12px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: 600;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            .slot-card.slot-1 .slot-number {
+                color: #8B5CF6;
+                border: 2px solid #8B5CF6;
+            }
+
+            .slot-card.slot-2 .slot-number {
+                color: #3B82F6;
+                border: 2px solid #3B82F6;
+            }
+
+            .slot-card.slot-3 .slot-number {
+                color: #10B981;
+                border: 2px solid #10B981;
+            }
+
+            .slot-empty-icon {
+                font-size: 32px;
+                color: #cbd5e1;
+                margin-bottom: 8px;
+            }
+
+            .slot-empty-text {
+                color: #94a3b8;
+                font-size: 14px;
+            }
+
+            .slot-content {
+                display: flex;
+                justify-content: space-between;
+                align-items: start;
+                gap: 12px;
+            }
+
+            .slot-info {
+                flex: 1;
+            }
+
+            .slot-idea-title {
+                font-weight: 600;
+                color: #1e293b;
+                margin-bottom: 4px;
+                font-size: 14px;
+            }
+
+            .slot-idea-genre {
+                display: inline-block;
+                padding: 2px 8px;
+                background: white;
+                border-radius: 12px;
+                font-size: 12px;
+                color: #64748b;
+                margin-bottom: 8px;
+            }
+
+            .slot-idea-desc {
+                font-size: 12px;
+                color: #64748b;
+                line-height: 1.4;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+
+            .slot-remove {
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                border: none;
+                background: white;
+                color: #94a3b8;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.3s ease;
+            }
+
+            .slot-remove:hover {
+                background: #fee2e2;
+                color: #ef4444;
+                transform: scale(1.1);
+            }
+
+            /* 创意区域 */
+            .ideas-section {
+                flex: 1;
+                padding: 24px;
+                overflow-y: auto;
+            }
+
+            .ideas-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 16px;
+            }
+
+            .multi-idea-card {
+                background: white;
+                border: 2px solid #e2e8f0;
+                border-radius: 12px;
+                padding: 16px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                position: relative;
+            }
+
+            .multi-idea-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            }
+
+            .multi-idea-card.selected-1 {
+                border-color: #8B5CF6;
+                background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, white 100%);
+            }
+
+            .multi-idea-card.selected-2 {
+                border-color: #3B82F6;
+                background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, white 100%);
+            }
+
+            .multi-idea-card.selected-3 {
+                border-color: #10B981;
+                background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, white 100%);
+            }
+
+            .idea-slot-badge {
+                position: absolute;
+                top: -8px;
+                right: -8px;
+                width: 28px;
+                height: 28px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 700;
+                font-size: 14px;
+                color: white;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            }
+
+            .idea-slot-badge.slot-1 { background: #8B5CF6; }
+            .idea-slot-badge.slot-2 { background: #3B82F6; }
+            .idea-slot-badge.slot-3 { background: #10B981; }
+
+            /* 底部操作栏 */
+            .panel-footer {
+                padding: 20px 32px;
+                border-top: 1px solid #e2e8f0;
+                background: white;
+                border-radius: 0 0 20px 20px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .selection-stats {
+                display: flex;
+                align-items: center;
+                gap: 24px;
+            }
+
+            .stat-item {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 14px;
+                color: #64748b;
+            }
+
+            .stat-value {
+                font-weight: 600;
+                color: #1e293b;
+            }
+
+            .panel-actions {
+                display: flex;
+                gap: 12px;
+            }
+
+            .btn-panel {
+                padding: 10px 24px;
+                border-radius: 8px;
+                border: none;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                font-size: 14px;
+            }
+
+            .btn-secondary {
+                background: #f1f5f9;
+                color: #64748b;
+            }
+
+            .btn-secondary:hover {
+                background: #e2e8f0;
+                color: #475569;
+            }
+
+            .btn-primary {
+                background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+                color: white;
+            }
+
+            .btn-primary:hover:not(:disabled) {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            }
+
+            .btn-primary:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+
+            /* 引导提示 */
+            .guide-tooltip {
+                position: absolute;
+                background: #1e293b;
+                color: white;
+                padding: 12px 16px;
+                border-radius: 8px;
+                font-size: 14px;
+                z-index: 1000;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+                animation: bounce 1s ease infinite;
+            }
+
+            .guide-tooltip::after {
+                content: '';
+                position: absolute;
+                bottom: -6px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 12px;
+                height: 12px;
+                background: #1e293b;
+                transform: rotate(45deg);
+            }
+
+            @keyframes bounce {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-10px); }
+            }
+
+            /* 动画效果 */
+            @keyframes slideIn {
+                from {
+                    transform: translateX(-100%);
+                    opacity: 0;
                 }
-                menu.remove();
-            });
-        });
-        
-        // 点击外部关闭
-        setTimeout(() => {
-            document.addEventListener('click', () => menu.remove(), { once: true });
-        }, 0);
-    },
-    
-    // 分配到槽位
-    assignToSlot(card, slot) {
-        const ideaData = {
-            id: card.dataset.id,
-            title: card.querySelector('.card-title').textContent.trim(),
-            content: card.querySelector('.card-content').textContent.trim(),
-            genre: card.querySelector('.card-badge').textContent.trim()
-        };
-        
-        // 清除该卡片的其他槽位
-        [1, 2, 3].forEach(s => {
-            if (this.state.slots[s]?.id === ideaData.id) {
-                this.state.slots[s] = null;
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
             }
-        });
-        
-        // 分配到新槽位
-        this.state.slots[slot] = ideaData;
-        
-        // 更新UI
-        this.updateCardUI(card, slot);
-        this.updateFloatingBar();
-        this.saveState();
-        
-        // 反馈
-        this.showToast(`已添加到槽位 ${slot} ${this.colors[slot].emoji}`, 'success');
-    },
-    
-    // 从槽位移除
-    removeFromSlot(slot) {
-        const ideaId = this.state.slots[slot]?.id;
-        this.state.slots[slot] = null;
-        
-        // 更新卡片UI
-        const card = document.querySelector(`.idea-card[data-id="${ideaId}"]`);
-        if (card) {
-            this.updateCardUI(card, null);
-        }
-        
-        this.updateFloatingBar();
-        this.saveState();
-        
-        this.showToast(`已从槽位 ${slot} 移除`, 'info');
-    },
-    
-    // 更新卡片UI
-    updateCardUI(card, slot) {
-        const badge = card.querySelector('.card-slot-badge');
-        const selectBtn = card.querySelector('.btn-select');
-        
-        // 移除所有槽位类
-        card.classList.remove('slot-1', 'slot-2', 'slot-3');
-        
-        if (slot) {
-            // 添加槽位标记
-            card.classList.add(`slot-${slot}`);
-            badge.innerHTML = `<span style="background: ${this.colors[slot].primary}">${slot}</span>`;
-            badge.style.display = 'block';
-            
-            // 更新按钮
-            selectBtn.innerHTML = `<i class="fas fa-check-circle"></i> 槽位 ${slot}`;
-            selectBtn.style.background = `linear-gradient(135deg, ${this.colors[slot].primary}dd, ${this.colors[slot].primary}99)`;
-            selectBtn.style.color = 'white';
-            selectBtn.style.border = 'none';
-        } else {
-            // 恢复默认状态
-            badge.style.display = 'none';
-            selectBtn.innerHTML = '<i class="fas fa-check"></i> 选择';
-            selectBtn.style.background = '';
-            selectBtn.style.color = '';
-            selectBtn.style.border = '';
-        }
-    },
-    
-    // 创建浮动状态栏
-    createFloatingBar() {
-        const bar = document.createElement('div');
-        bar.className = 'multi-floating-bar';
-        bar.innerHTML = `
-            <div class="floating-bar-content">
-                <div class="floating-slots">
-                    <div class="floating-slot" data-slot="1">
-                        <span class="floating-slot-number">1</span>
-                        <span class="floating-slot-title">空</span>
-                        <button class="floating-slot-remove" style="display: none">×</button>
-                    </div>
-                    <div class="floating-slot" data-slot="2">
-                        <span class="floating-slot-number">2</span>
-                        <span class="floating-slot-title">空</span>
-                        <button class="floating-slot-remove" style="display: none">×</button>
-                    </div>
-                    <div class="floating-slot" data-slot="3">
-                        <span class="floating-slot-number">3</span>
-                        <span class="floating-slot-title">空</span>
-                        <button class="floating-slot-remove" style="display: none">×</button>
+
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+
+            .animate-slide-in {
+                animation: slideIn 0.3s ease;
+            }
+
+            .animate-fade-in {
+                animation: fadeIn 0.3s ease;
+            }
+
+            /* 响应式 */
+            @media (max-width: 768px) {
+                .selection-panel {
+                    width: 100%;
+                    height: 100%;
+                    max-width: none;
+                    max-height: none;
+                    border-radius: 0;
+                }
+
+                .panel-body {
+                    flex-direction: column;
+                }
+
+                .slots-section {
+                    width: 100%;
+                    border-right: none;
+                    border-bottom: 1px solid #e2e8f0;
+                }
+
+                .slot-cards {
+                    flex-direction: row;
+                    overflow-x: auto;
+                    padding-bottom: 12px;
+                }
+
+                .slot-card {
+                    min-width: 200px;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // 注入模式选择器
+    function injectModeSelector() {
+        const selector = document.createElement('div');
+        selector.className = 'mode-selector';
+        selector.innerHTML = `
+            <button class="mode-btn active" data-mode="single">
+                <i class="fas fa-file-alt"></i> 单线模式
+            </button>
+            <button class="mode-btn" data-mode="multi">
+                <i class="fas fa-layer-group"></i> 多线路模式
+                <span class="badge" style="display: none;">0</span>
+            </button>
+        `;
+        document.body.appendChild(selector);
+
+        // 创建选择面板
+        const panel = createSelectionPanel();
+        document.body.appendChild(panel);
+
+        // 创建覆盖层
+        const overlay = document.createElement('div');
+        overlay.className = 'multi-select-overlay';
+        document.body.appendChild(overlay);
+    }
+
+    // 创建选择面板
+    function createSelectionPanel() {
+        const panel = document.createElement('div');
+        panel.className = 'selection-panel';
+        panel.innerHTML = `
+            <button class="panel-close">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="panel-header">
+                <h2 class="panel-title">
+                    <i class="fas fa-layer-group"></i>
+                    选择创意开始多线路创作
+                </h2>
+                <p class="panel-subtitle">选择1-3个不同的创意，每个都会独立生成完整的故事线</p>
+            </div>
+            <div class="panel-body">
+                <div class="slots-section">
+                    <h3 class="slots-title">创作槽位</h3>
+                    <div class="slot-cards">
+                        <div class="slot-card empty slot-1" data-slot="1">
+                            <span class="slot-number">槽位 1</span>
+                            <i class="fas fa-plus-circle slot-empty-icon"></i>
+                            <span class="slot-empty-text">点击右侧选择创意</span>
+                        </div>
+                        <div class="slot-card empty slot-2" data-slot="2">
+                            <span class="slot-number">槽位 2</span>
+                            <i class="fas fa-plus-circle slot-empty-icon"></i>
+                            <span class="slot-empty-text">点击右侧选择创意</span>
+                        </div>
+                        <div class="slot-card empty slot-3" data-slot="3">
+                            <span class="slot-number">槽位 3</span>
+                            <i class="fas fa-plus-circle slot-empty-icon"></i>
+                            <span class="slot-empty-text">点击右侧选择创意</span>
+                        </div>
                     </div>
                 </div>
-                <div class="floating-actions">
-                    <button class="btn-floating-start" disabled>
+                <div class="ideas-section">
+                    <div class="ideas-grid">
+                        <!-- 动态填充创意卡片 -->
+                    </div>
+                </div>
+            </div>
+            <div class="panel-footer">
+                <div class="selection-stats">
+                    <div class="stat-item">
+                        <i class="fas fa-check-circle"></i>
+                        已选择 <span class="stat-value">0</span> / 3
+                    </div>
+                    <div class="stat-item">
                         <i class="fas fa-rocket"></i>
-                        <span>开始创作</span>
+                        将创建 <span class="stat-value">0</span> 条故事线
+                    </div>
+                </div>
+                <div class="panel-actions">
+                    <button class="btn-panel btn-secondary" onclick="MultiBrainHole.clearAll()">
+                        <i class="fas fa-redo"></i> 重置
                     </button>
-                    <button class="btn-floating-help">
-                        <i class="fas fa-question-circle"></i>
+                    <button class="btn-panel btn-primary" disabled onclick="MultiBrainHole.startCreation()">
+                        <i class="fas fa-play"></i> 开始创作
                     </button>
                 </div>
             </div>
         `;
+        return panel;
+    }
+
+    // 增强界面
+    function enhanceInterface() {
+        // 同步创意卡片到选择面板
+        syncIdeaCards();
+    }
+
+    // 同步创意卡片
+    function syncIdeaCards() {
+        const originalCards = document.querySelectorAll('.idea-card');
+        const ideasGrid = document.querySelector('.ideas-section .ideas-grid');
         
-        document.body.appendChild(bar);
+        if (!ideasGrid) return;
         
-        // 添加事件
-        bar.querySelectorAll('.floating-slot').forEach(slotEl => {
-            const slot = parseInt(slotEl.dataset.slot);
+        ideasGrid.innerHTML = '';
+        
+        originalCards.forEach(card => {
+            const multiCard = document.createElement('div');
+            multiCard.className = 'multi-idea-card';
+            multiCard.dataset.id = card.dataset.id;
             
-            slotEl.addEventListener('click', () => {
-                if (!this.state.slots[slot]) {
-                    // 空槽位，高亮显示
-                    this.highlightEmptySlot(slot);
-                } else {
-                    // 已占用，滚动到对应卡片
-                    this.scrollToCard(this.state.slots[slot].id);
-                }
+            const title = card.querySelector('.card-title')?.textContent || '';
+            const content = card.querySelector('.card-content')?.textContent || '';
+            const genre = card.querySelector('.card-badge')?.textContent || '';
+            
+            multiCard.innerHTML = `
+                <div class="card-genre" style="
+                    display: inline-block;
+                    padding: 4px 12px;
+                    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+                    color: white;
+                    border-radius: 20px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    margin-bottom: 12px;
+                ">${genre}</div>
+                <h3 style="
+                    font-size: 16px;
+                    font-weight: 600;
+                    color: #1e293b;
+                    margin-bottom: 8px;
+                ">${title}</h3>
+                <p style="
+                    font-size: 14px;
+                    color: #64748b;
+                    line-height: 1.5;
+                    display: -webkit-box;
+                    -webkit-line-clamp: 3;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                ">${content}</p>
+            `;
+            
+            ideasGrid.appendChild(multiCard);
+        });
+    }
+
+    // 绑定事件
+    function bindEvents() {
+        // 模式切换
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const mode = e.currentTarget.dataset.mode;
+                switchMode(mode);
             });
-            
-            const removeBtn = slotEl.querySelector('.floating-slot-remove');
-            removeBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this.removeFromSlot(slot);
-            });
         });
-        
-        // 开始按钮
-        bar.querySelector('.btn-floating-start').addEventListener('click', () => {
-            this.startCreation();
-        });
-        
-        // 帮助按钮
-        bar.querySelector('.btn-floating-help').addEventListener('click', () => {
-            this.showGuide();
-        });
-    },
-    
-    // 更新浮动栏
-    updateFloatingBar() {
-        const bar = document.querySelector('.multi-floating-bar');
-        if (!bar) return;
-        
-        let selectedCount = 0;
-        
-        [1, 2, 3].forEach(slot => {
-            const slotEl = bar.querySelector(`.floating-slot[data-slot="${slot}"]`);
-            const data = this.state.slots[slot];
-            
-            if (data) {
-                selectedCount++;
-                slotEl.classList.add('occupied');
-                slotEl.querySelector('.floating-slot-title').textContent = data.title.substring(0, 8) + '...';
-                slotEl.querySelector('.floating-slot-remove').style.display = 'block';
-                slotEl.style.borderColor = this.colors[slot].primary;
-                slotEl.querySelector('.floating-slot-number').style.background = this.colors[slot].primary;
-            } else {
-                slotEl.classList.remove('occupied');
-                slotEl.querySelector('.floating-slot-title').textContent = '空';
-                slotEl.querySelector('.floating-slot-remove').style.display = 'none';
-                slotEl.style.borderColor = '';
-                slotEl.querySelector('.floating-slot-number').style.background = '';
+
+        // 关闭面板
+        document.querySelector('.panel-close').addEventListener('click', closePanel);
+        document.querySelector('.multi-select-overlay').addEventListener('click', closePanel);
+
+        // 创意卡片点击
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.multi-idea-card')) {
+                const card = e.target.closest('.multi-idea-card');
+                toggleCardSelection(card);
             }
         });
+
+        // 槽位移除按钮
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('.slot-remove')) {
+                const slotCard = e.target.closest('.slot-card');
+                const slotNumber = parseInt(slotCard.dataset.slot);
+                clearSlot(slotNumber);
+            }
+        });
+    }
+
+    // 切换模式
+    function switchMode(mode) {
+        state.mode = mode;
         
-        // 更新开始按钮
-        const startBtn = bar.querySelector('.btn-floating-start');
-        startBtn.disabled = selectedCount === 0;
-        
-        // 更新数字
-        const span = startBtn.querySelector('span');
-        if (selectedCount > 0) {
-            span.textContent = `开始创作 (${selectedCount})`;
+        // 更新按钮状态
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.mode === mode);
+        });
+
+        if (mode === 'multi') {
+            openPanel();
         } else {
-            span.textContent = '开始创作';
+            closePanel();
+            // 切回单线模式逻辑
         }
+    }
+
+    // 打开面板
+    function openPanel() {
+        document.querySelector('.multi-select-overlay').classList.add('active');
+        document.querySelector('.selection-panel').classList.add('active');
         
-        // 显示/隐藏浮动栏
-        if (selectedCount > 0) {
-            bar.classList.add('visible');
-        }
-    },
-    
-    // 增强导航栏
-    enhanceNavbar() {
-        const navProgress = document.querySelector('.nav-progress');
-        if (!navProgress) return;
+        // 刷新创意卡片
+        syncIdeaCards();
         
-        // 在进度条前添加线路指示器
-        const indicator = document.createElement('div');
-        indicator.className = 'line-indicator';
-        indicator.innerHTML = `
-            <span class="line-indicator-label">当前线路:</span>
-            <div class="line-indicator-tabs">
-                <button class="line-tab active" data-line="1">
-                    <span class="line-dot" style="background: ${this.colors[1].primary}"></span>
-                </button>
-                <button class="line-tab" data-line="2">
-                    <span class="line-dot" style="background: ${this.colors[2].primary}"></span>
-                </button>
-                <button class="line-tab" data-line="3">
-                    <span class="line-dot" style="background: ${this.colors[3].primary}"></span>
-                </button>
-            </div>
-        `;
+        // 恢复选择状态
+        restoreSelections();
+    }
+
+    // 关闭面板
+    function closePanel() {
+        document.querySelector('.multi-select-overlay').classList.remove('active');
+        document.querySelector('.selection-panel').classList.remove('active');
+    }
+
+    // 切换卡片选择
+    function toggleCardSelection(card) {
+        const ideaId = card.dataset.id;
         
-        navProgress.parentNode.insertBefore(indicator, navProgress);
-        
-        // 默认隐藏
-        indicator.style.display = 'none';
-    },
-    
-    // 显示引导
-    showGuide() {
-        const guide = document.createElement('div');
-        guide.className = 'multi-guide-overlay';
-        guide.innerHTML = `
-            <div class="multi-guide">
-                <h3>🎯 多脑洞并行创作指南</h3>
-                <div class="guide-steps">
-                    <div class="guide-step">
-                        <span class="guide-number">1</span>
-                        <div class="guide-content">
-                            <h4>选择创意</h4>
-                            <p>点击卡片的"选择"按钮，最多可选3个</p>
-                        </div>
-                    </div>
-                    <div class="guide-step">
-                        <span class="guide-number">2</span>
-                        <div class="guide-content">
-                            <h4>分配槽位</h4>
-                            <p>长按"选择"按钮可指定槽位</p>
-                        </div>
-                    </div>
-                    <div class="guide-step">
-                        <span class="guide-number">3</span>
-                        <div class="guide-content">
-                            <h4>开始创作</h4>
-                            <p>点击底部"开始创作"按钮</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="guide-colors">
-                    <span><span class="color-dot" style="background: ${this.colors[1].primary}"></span> 槽位1</span>
-                    <span><span class="color-dot" style="background: ${this.colors[2].primary}"></span> 槽位2</span>
-                    <span><span class="color-dot" style="background: ${this.colors[3].primary}"></span> 槽位3</span>
-                </div>
-                <button class="guide-close">知道了</button>
-            </div>
-        `;
-        
-        document.body.appendChild(guide);
-        
-        guide.querySelector('.guide-close').addEventListener('click', () => {
-            guide.classList.add('fade-out');
-            setTimeout(() => guide.remove(), 300);
-        });
-        
-        guide.addEventListener('click', (e) => {
-            if (e.target === guide) {
-                guide.classList.add('fade-out');
-                setTimeout(() => guide.remove(), 300);
-            }
-        });
-    },
-    
-    // 工具方法
-    getCardSlot(cardId) {
-        for (let slot = 1; slot <= 3; slot++) {
-            if (this.state.slots[slot]?.id === cardId) {
-                return slot;
-            }
-        }
-        return null;
-    },
-    
-    findNextEmptySlot() {
-        for (let slot = 1; slot <= 3; slot++) {
-            if (!this.state.slots[slot]) {
-                return slot;
-            }
-        }
-        return null;
-    },
-    
-    highlightEmptySlot(slot) {
-        this.showToast(`请选择一个创意添加到槽位 ${slot} ${this.colors[slot].emoji}`, 'info');
-        document.querySelector('.waterfall-container').scrollIntoView({ behavior: 'smooth' });
-    },
-    
-    scrollToCard(cardId) {
-        const card = document.querySelector(`.idea-card[data-id="${cardId}"]`);
-        if (card) {
-            card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            card.classList.add('highlight');
-            setTimeout(() => card.classList.remove('highlight'), 2000);
-        }
-    },
-    
-    showToast(message, type = 'info') {
-        const toast = document.createElement('div');
-        toast.className = `multi-toast multi-toast-${type}`;
-        toast.textContent = message;
-        document.body.appendChild(toast);
-        
-        setTimeout(() => toast.classList.add('show'), 100);
-        setTimeout(() => {
-            toast.classList.remove('show');
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
-    },
-    
-    startCreation() {
-        const selectedCount = Object.values(this.state.slots).filter(s => s).length;
-        if (selectedCount === 0) return;
-        
-        // 显示线路指示器
-        document.querySelector('.line-indicator').style.display = 'flex';
-        
-        // 隐藏浮动栏
-        document.querySelector('.multi-floating-bar').classList.add('minimized');
-        
-        this.showToast(`🚀 开始${selectedCount}条线路的创作之旅！`, 'success');
-        
-        // 添加到聊天
-        if (window.addMessageToChat) {
-            window.addMessageToChat('assistant', 
-                `太棒了！我已经为你准备好了${selectedCount}条创作线路：\n\n` +
-                Object.entries(this.state.slots)
-                    .filter(([_, data]) => data)
-                    .map(([slot, data]) => `${this.colors[slot].emoji} 线路${slot}：${data.title}`)
-                    .join('\n') +
-                '\n\n你可以随时切换线路查看不同的创作进度。让我们开始吧！'
-            );
-        }
-    },
-    
-    saveState() {
-        localStorage.setItem('multiBrainHoleV2', JSON.stringify(this.state));
-    },
-    
-    loadState() {
-        const saved = localStorage.getItem('multiBrainHoleV2');
-        if (saved) {
-            try {
-                this.state = JSON.parse(saved);
-                
-                // 恢复UI
-                Object.entries(this.state.slots).forEach(([slot, data]) => {
-                    if (data) {
-                        const card = document.querySelector(`.idea-card[data-id="${data.id}"]`);
-                        if (card) {
-                            this.updateCardUI(card, parseInt(slot));
-                        }
-                    }
-                });
-                
-                this.updateFloatingBar();
-            } catch (e) {
-                console.error('Failed to load state:', e);
+        if (state.selectedSlots.has(ideaId)) {
+            // 取消选择
+            const slotNumber = state.selectedSlots.get(ideaId);
+            clearSlot(slotNumber);
+        } else {
+            // 添加选择
+            const emptySlot = findEmptySlot();
+            if (emptySlot) {
+                selectIdea(ideaId, emptySlot);
+            } else {
+                showMessage('已选择3个创意，请先移除一个');
             }
         }
     }
-};
 
-// 添加样式
-const styleV2 = document.createElement('style');
-styleV2.textContent = `
-/* 卡片槽位标记 */
-.card-slot-badge {
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    z-index: 10;
-}
+    // 查找空槽位
+    function findEmptySlot() {
+        for (let i = 1; i <= CONFIG.MAX_SLOTS; i++) {
+            if (![...state.selectedSlots.values()].includes(i)) {
+                return i;
+            }
+        }
+        return null;
+    }
 
-.card-slot-badge span {
-    display: block;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    color: white;
-    font-size: 12px;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-}
+    // 选择创意
+    function selectIdea(ideaId, slotNumber) {
+        const card = document.querySelector(`.multi-idea-card[data-id="${ideaId}"]`);
+        if (!card) return;
 
-/* 卡片选中状态 */
-.idea-card.slot-1 {
-    border: 2px solid #8b5cf6 !important;
-    background: linear-gradient(to bottom, rgba(139, 92, 246, 0.03), transparent) !important;
-}
+        // 更新状态
+        state.selectedSlots.set(ideaId, slotNumber);
 
-.idea-card.slot-2 {
-    border: 2px solid #3b82f6 !important;
-    background: linear-gradient(to bottom, rgba(59, 130, 246, 0.03), transparent) !important;
-}
+        // 更新卡片样式
+        card.classList.add(`selected-${slotNumber}`);
+        
+        // 添加角标
+        const badge = document.createElement('div');
+        badge.className = `idea-slot-badge slot-${slotNumber}`;
+        badge.textContent = slotNumber;
+        card.appendChild(badge);
 
-.idea-card.slot-3 {
-    border: 2px solid #10b981 !important;
-    background: linear-gradient(to bottom, rgba(16, 185, 129, 0.03), transparent) !important;
-}
+        // 更新槽位卡片
+        updateSlotCard(slotNumber, card);
 
-.idea-card.highlight {
-    animation: highlight 2s ease;
-}
+        // 更新统计
+        updateStats();
 
-@keyframes highlight {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
-}
+        // 保存状态
+        saveState();
+    }
 
-/* 槽位选择菜单 */
-.slot-menu {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-    padding: 0.5rem;
-    z-index: 10000;
-    min-width: 180px;
-    animation: slideUp 0.2s ease;
-}
+    // 更新槽位卡片
+    function updateSlotCard(slotNumber, ideaCard) {
+        const slotCard = document.querySelector(`.slot-card[data-slot="${slotNumber}"]`);
+        if (!slotCard) return;
 
-.slot-menu-title {
-    padding: 0.5rem 0.75rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: #64748b;
-    border-bottom: 1px solid #e2e8f0;
-    margin-bottom: 0.5rem;
-}
+        const title = ideaCard.querySelector('h3')?.textContent || '';
+        const genre = ideaCard.querySelector('.card-genre')?.textContent || '';
+        const content = ideaCard.querySelector('p')?.textContent || '';
 
-.slot-menu-option {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    width: 100%;
-    padding: 0.625rem 0.75rem;
-    background: none;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-align: left;
-}
+        slotCard.classList.remove('empty');
+        slotCard.classList.add('filled', 'animate-fade-in');
 
-.slot-menu-option:hover:not(:disabled) {
-    background: #f1f5f9;
-}
+        slotCard.innerHTML = `
+            <span class="slot-number">槽位 ${slotNumber}</span>
+            <div class="slot-content">
+                <div class="slot-info">
+                    <h4 class="slot-idea-title">${title}</h4>
+                    <span class="slot-idea-genre">${genre}</span>
+                    <p class="slot-idea-desc">${content}</p>
+                </div>
+                <button class="slot-remove">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+    }
 
-.slot-menu-option:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
+    // 清空槽位
+    function clearSlot(slotNumber) {
+        // 找到对应的创意ID
+        let ideaId = null;
+        for (let [id, slot] of state.selectedSlots) {
+            if (slot === slotNumber) {
+                ideaId = id;
+                break;
+            }
+        }
 
-.slot-menu-color {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-}
+        if (!ideaId) return;
 
-.slot-menu-label {
-    flex: 1;
-    font-size: 0.875rem;
-    color: #1e293b;
-}
+        // 更新状态
+        state.selectedSlots.delete(ideaId);
 
-.slot-menu-label small {
-    display: block;
-    font-size: 0.75rem;
-    color: #94a3b8;
-}
+        // 更新创意卡片
+        const card = document.querySelector(`.multi-idea-card[data-id="${ideaId}"]`);
+        if (card) {
+            card.classList.remove(`selected-${slotNumber}`);
+            const badge = card.querySelector('.idea-slot-badge');
+            if (badge) badge.remove();
+        }
 
-/* 浮动状态栏 */
-.multi-floating-bar {
-    position: fixed;
-    bottom: -100px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: white;
-    border-radius: 24px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
-    padding: 1rem 1.5rem;
-    z-index: 1000;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
+        // 重置槽位卡片
+        const slotCard = document.querySelector(`.slot-card[data-slot="${slotNumber}"]`);
+        if (slotCard) {
+            slotCard.classList.add('empty');
+            slotCard.classList.remove('filled');
+            slotCard.innerHTML = `
+                <span class="slot-number">槽位 ${slotNumber}</span>
+                <i class="fas fa-plus-circle slot-empty-icon"></i>
+                <span class="slot-empty-text">点击右侧选择创意</span>
+            `;
+        }
 
-.multi-floating-bar.visible {
-    bottom: 24px;
-}
+        // 更新统计
+        updateStats();
 
-.multi-floating-bar.minimized {
-    bottom: 24px;
-    transform: translateX(calc(-50% + 200px)) scale(0.8);
-    opacity: 0.8;
-}
+        // 保存状态
+        saveState();
+    }
 
-.floating-bar-content {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-}
+    // 清空所有
+    function clearAll() {
+        for (let i = 1; i <= CONFIG.MAX_SLOTS; i++) {
+            clearSlot(i);
+        }
+    }
 
-.floating-slots {
-    display: flex;
-    gap: 0.75rem;
-}
+    // 更新统计
+    function updateStats() {
+        const count = state.selectedSlots.size;
+        
+        // 更新面板统计
+        document.querySelectorAll('.stat-value')[0].textContent = count;
+        document.querySelectorAll('.stat-value')[1].textContent = count;
 
-.floating-slot {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
-    border: 2px solid #e2e8f0;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-    position: relative;
-}
+        // 更新按钮状态
+        const startBtn = document.querySelector('.btn-primary');
+        startBtn.disabled = count === 0;
 
-.floating-slot:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
+        // 更新模式按钮角标
+        const badge = document.querySelector('.mode-btn[data-mode="multi"] .badge');
+        if (count > 0) {
+            badge.style.display = 'block';
+            badge.textContent = count;
+        } else {
+            badge.style.display = 'none';
+        }
+    }
 
-.floating-slot.occupied {
-    background: linear-gradient(to right, rgba(139, 92, 246, 0.05), transparent);
-}
+    // 开始创作
+    function startCreation() {
+        if (state.selectedSlots.size === 0) {
+            showMessage('请至少选择一个创意');
+            return;
+        }
 
-.floating-slot-number {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: #e2e8f0;
-    color: white;
-    font-size: 11px;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+        // 关闭面板
+        closePanel();
 
-.floating-slot-title {
-    font-size: 0.875rem;
-    color: #64748b;
-    min-width: 60px;
-}
+        // 切换到创作界面
+        showMessage(`已创建 ${state.selectedSlots.size} 条创作线路！`);
 
-.floating-slot.occupied .floating-slot-title {
-    color: #1e293b;
-    font-weight: 500;
-}
+        // TODO: 实际的创作逻辑
+    }
 
-.floating-slot-remove {
-    position: absolute;
-    top: -6px;
-    right: -6px;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    background: #ef4444;
-    color: white;
-    border: 2px solid white;
-    font-size: 12px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+    // 显示引导
+    function showGuide() {
+        if (state.isGuideShown) return;
+        
+        const steps = [
+            { element: '.mode-btn[data-mode="multi"]', text: '点击这里进入多线路模式' },
+            { element: '.ideas-grid', text: '选择1-3个你喜欢的创意' },
+            { element: '.slot-cards', text: '已选创意会显示在这里' },
+            { element: '.btn-primary', text: '选好后点击开始创作' }
+        ];
 
-.floating-actions {
-    display: flex;
-    gap: 0.5rem;
-}
+        // TODO: 实现引导逻辑
+        
+        state.isGuideShown = true;
+        localStorage.setItem('multiBrainHoleGuideShown', 'true');
+    }
 
-.btn-floating-start {
-    padding: 0.625rem 1.25rem;
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
+    // 显示消息
+    function showMessage(text) {
+        // 使用现有的聊天消息系统
+        if (typeof addMessageToChat === 'function') {
+            addMessageToChat('assistant', text);
+        } else {
+            console.log(text);
+        }
+    }
 
-.btn-floating-start:not(:disabled):hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-}
+    // 保存状态
+    function saveState() {
+        localStorage.setItem('multiBrainHoleState', JSON.stringify({
+            selectedSlots: Array.from(state.selectedSlots.entries()),
+            lines: state.lines
+        }));
+    }
 
-.btn-floating-start:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
+    // 恢复状态
+    function restoreState() {
+        const saved = localStorage.getItem('multiBrainHoleState');
+        if (!saved) return;
 
-.btn-floating-help {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: #f1f5f9;
-    border: none;
-    color: #64748b;
-    cursor: pointer;
-    transition: all 0.2s;
-}
+        try {
+            const data = JSON.parse(saved);
+            state.selectedSlots = new Map(data.selectedSlots || []);
+            state.lines = data.lines || {};
+            
+            updateStats();
+        } catch (e) {
+            console.error('Failed to restore state:', e);
+        }
+    }
 
-.btn-floating-help:hover {
-    background: #e2e8f0;
-    color: #1e293b;
-}
+    // 恢复选择状态
+    function restoreSelections() {
+        state.selectedSlots.forEach((slotNumber, ideaId) => {
+            const card = document.querySelector(`.multi-idea-card[data-id="${ideaId}"]`);
+            if (card) {
+                selectIdea(ideaId, slotNumber);
+            }
+        });
+    }
 
-/* 线路指示器 */
-.line-indicator {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.375rem 0.75rem;
-    background: rgba(255,255,255,0.1);
-    border-radius: 8px;
-    margin-bottom: 0.5rem;
-}
+    // 导出API
+    window.MultiBrainHole = {
+        init,
+        switchMode,
+        clearAll,
+        startCreation
+    };
 
-.line-indicator-label {
-    font-size: 0.75rem;
-    color: rgba(255,255,255,0.7);
-}
-
-.line-indicator-tabs {
-    display: flex;
-    gap: 0.375rem;
-}
-
-.line-tab {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.1);
-    border: 2px solid transparent;
-    cursor: pointer;
-    transition: all 0.2s;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.line-tab:hover {
-    background: rgba(255,255,255,0.2);
-}
-
-.line-tab.active {
-    background: rgba(255,255,255,0.2);
-    border-color: rgba(255,255,255,0.5);
-}
-
-.line-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-}
-
-/* 引导界面 */
-.multi-guide-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.6);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10000;
-    animation: fadeIn 0.3s;
-}
-
-.multi-guide {
-    background: white;
-    border-radius: 16px;
-    padding: 2rem;
-    max-width: 500px;
-    width: 90%;
-    animation: slideUp 0.3s;
-}
-
-.multi-guide h3 {
-    margin: 0 0 1.5rem 0;
-    font-size: 1.25rem;
-    text-align: center;
-}
-
-.guide-steps {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-}
-
-.guide-step {
-    display: flex;
-    gap: 1rem;
-    align-items: flex-start;
-}
-
-.guide-number {
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: bold;
-    font-size: 0.875rem;
-    flex-shrink: 0;
-}
-
-.guide-content h4 {
-    margin: 0 0 0.25rem 0;
-    font-size: 1rem;
-}
-
-.guide-content p {
-    margin: 0;
-    color: #64748b;
-    font-size: 0.875rem;
-}
-
-.guide-colors {
-    display: flex;
-    justify-content: center;
-    gap: 1.5rem;
-    margin-bottom: 1.5rem;
-    padding: 1rem;
-    background: #f8fafc;
-    border-radius: 8px;
-}
-
-.guide-colors span {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-    color: #64748b;
-}
-
-.color-dot {
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-}
-
-.guide-close {
-    width: 100%;
-    padding: 0.75rem;
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.guide-close:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-}
-
-/* Toast提示 */
-.multi-toast {
-    position: fixed;
-    bottom: 100px;
-    left: 50%;
-    transform: translateX(-50%) translateY(100px);
-    background: white;
-    padding: 0.75rem 1.25rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    z-index: 10001;
-    transition: transform 0.3s;
-    font-size: 0.875rem;
-}
-
-.multi-toast.show {
-    transform: translateX(-50%) translateY(0);
-}
-
-.multi-toast-success {
-    border-left: 3px solid #10b981;
-}
-
-.multi-toast-info {
-    border-left: 3px solid #3b82f6;
-}
-
-/* 动画 */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-@keyframes slideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
-
-.fade-out {
-    animation: fadeOut 0.3s forwards;
-}
-
-@keyframes fadeOut {
-    to { opacity: 0; }
-}
-`;
-
-document.head.appendChild(styleV2);
-
-// 初始化
-window.initMultiBrainHoleV2 = () => MultiBrainHoleV2.init();
+    // 自动初始化
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
