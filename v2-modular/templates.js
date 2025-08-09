@@ -166,7 +166,7 @@ const pageTemplates = {
             <button onclick="prevStep()" class="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-300 transition-all">
                 <i class="fas fa-arrow-left mr-2"></i>返回
             </button>
-            <button onclick="generateNovel()" id="generateNovelBtn" class="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-8 py-3 rounded-lg font-medium hover:shadow-lg transition-all opacity-50 cursor-not-allowed" disabled>
+            <button onclick="goToNovelStep()" id="generateNovelBtn" class="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-8 py-3 rounded-lg font-medium hover:shadow-lg transition-all opacity-50 cursor-not-allowed" disabled>
                 下一步: 撰写小说 <i class="fas fa-arrow-right ml-2"></i>
             </button>
         </div>

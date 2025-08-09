@@ -180,6 +180,11 @@ function processNovelStreamContent(fullContent) {
     const newContent = fullContent.substring(novelParserState.lastProcessedIndex);
     if (!newContent) return;
     
+    // 输出调试信息
+    if (newContent.length > 0 && novelParserState.lastProcessedIndex === 0) {
+        console.log('🔍 首次接收到小说内容:', newContent.substring(0, 100));
+    }
+    
     for (let i = 0; i < newContent.length; i++) {
         const char = newContent[i];
         novelParserState.buffer += char;

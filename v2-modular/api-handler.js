@@ -145,10 +145,17 @@ function processBufferLine(line, onChunk) {
             console.log('📝 流式输出开始:', data.metadata);
         } else if (data.type === 'end') {
             console.log('✅ 流式输出结束');
+        } else {
+            // 输出其他格式的数据以便调试
+            console.log('🔍 其他数据格式:', data);
         }
     } catch (error) {
         // 不是JSON格式，可能是普通文本
         console.warn('解析行数据失败:', line);
+        // 尝试直接作为XML内容处理
+        if (line.trim() && onChunk) {
+            onChunk(line);
+        }
     }
 }
 

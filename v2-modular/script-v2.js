@@ -188,11 +188,21 @@ function goToStep(step) {
             restoreCachedOutline();
         }
     }
-    // 如果跳转到小说步骤且还没有生成小说，自动生成
-    if (step === 4 && !document.getElementById('novelText')?.textContent) {
-        setTimeout(() => {
-            generateNovel();
-        }, 500);
+    // 如果跳转到小说步骤
+    if (step === 4) {
+        // 检查是否有缓存的小说内容
+        const cachedNovel = localStorage.getItem('currentNovel');
+        const novelText = document.getElementById('novelText');
+        
+        // 如果没有内容也没有缓存，且不是从按钮跳转来的，才自动生成
+        if (!cachedNovel && !novelText?.textContent && !window.isGeneratingNovel) {
+            setTimeout(() => {
+                generateNovel();
+            }, 500);
+        } else if (cachedNovel && !novelText?.textContent) {
+            // 如果有缓存，恢复缓存内容
+            // TODO: 实现restoreCachedNovel函数
+        }
     }
     // 如果跳转到脚本步骤且还没有生成脚本，自动生成
     if (step === 5 && !document.getElementById('scenesContainer')?.children.length) {
@@ -223,6 +233,19 @@ function canAccessStep(step) {
     if (step === 5) return stepHistory.includes(4);
     
     return false;
+}
+
+// 跳转到小说步骤并生成
+function goToNovelStep() {
+    // 跳转到小说页面
+    goToStep(4);
+    
+    // 如果还没有生成小说，自动生成
+    setTimeout(() => {
+        if (!document.getElementById('novelText')?.textContent) {
+            generateNovel();
+        }
+    }, 500);
 }
 
 // 切换到下一步
