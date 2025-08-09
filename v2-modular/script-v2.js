@@ -319,26 +319,21 @@ function updateUI() {
         }
     });
     
-    // 更新连接线状态（添加动画效果）
+    // 更新连接线状态（添加动画效果）- 优化：只有完成的步骤之间才显示连接线
     document.querySelectorAll('.progress-line').forEach((line, index) => {
         const wasActive = line.classList.contains('active');
         const wasCompleted = line.classList.contains('completed');
         
         line.classList.remove('active', 'completed', 'animating');
         
-        if (index < progressIndex) {
-            // 如果这条线刚从active变为completed，添加动画
-            if (wasActive && !wasCompleted) {
-                line.classList.add('animating');
-                setTimeout(() => {
-                    line.classList.remove('animating');
-                    line.classList.add('completed');
-                }, 50);
-            } else {
-                line.classList.add('completed');
-            }
-        } else if (index === progressIndex) {
-            // 如果这条线刚变为active，添加动画
+        // 只有当前步骤之前的连接线才显示为完成状态
+        // 当前步骤不显示向后的连接线
+        if (index < progressIndex - 1) {
+            // 已完成的连接线
+            line.classList.add('completed');
+        } else if (index === progressIndex - 1 && progressIndex > 0) {
+            // 正在进行的连接线（从上一个完成的步骤到当前步骤）
+            // 添加填充动画
             if (!wasActive) {
                 line.classList.add('animating');
                 setTimeout(() => {
@@ -349,6 +344,7 @@ function updateUI() {
                 line.classList.add('active');
             }
         }
+        // 其他所有连接线保持默认状态（灰色）
     });
     
     // 更新步骤标签颜色和可访问性
