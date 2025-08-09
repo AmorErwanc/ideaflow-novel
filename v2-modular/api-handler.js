@@ -4,8 +4,8 @@
 const API_CONFIG = {
     ideas: 'https://n8n.games/webhook/c78e428c-bc35-4d74-a52a-65328e76f6bd',
     outline: 'https://n8n.games/webhook/fdd124d6-8faa-433f-8c03-ca38f91245ec',
-    novel: 'https://n8n.games/webhook-test/3d68b832-8645-4013-b210-64f9ce510875',
-    script: 'https://n8n.games/webhook-test/42c7a477-b620-44ed-894a-59099d267d49'
+    novel: 'https://n8n.games/webhook/3d68b832-8645-4013-b210-64f9ce510875',
+    script: 'https://n8n.games/webhook/42c7a477-b620-44ed-894a-59099d267d49'
 };
 
 // 生成会话ID
