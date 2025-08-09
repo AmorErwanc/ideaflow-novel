@@ -17,25 +17,18 @@ function handleEditIconClick(e) {
     e.stopPropagation();
     e.preventDefault();
     
-    // 查找对应的可编辑元素
-    // 编辑图标可能是wrapper的下一个兄弟元素
-    let wrapper = e.target.previousElementSibling;
-    if (wrapper && (wrapper.classList.contains('title-wrapper') || wrapper.classList.contains('content-wrapper'))) {
-        const editable = wrapper.querySelector('.editable');
+    // 使用closest向上查找到包含编辑内容的容器
+    const container = e.target.closest('.idea-title, .idea-content');
+    if (container) {
+        const editable = container.querySelector('.editable');
         if (editable) {
+            console.log('✏️ 开始编辑:', editable.dataset.type, editable.dataset.id);
             startEdit(editable);
-            return;
+        } else {
+            console.warn('⚠️ 无法找到可编辑元素');
         }
-    }
-    
-    // 兼容旧结构
-    let editable = e.target.previousElementSibling;
-    while (editable && !editable.classList.contains('editable')) {
-        editable = editable.previousElementSibling;
-    }
-    
-    if (editable && editable.classList.contains('editable')) {
-        startEdit(editable);
+    } else {
+        console.warn('⚠️ 无法找到容器元素');
     }
 }
 
@@ -101,10 +94,15 @@ function saveEditBtn(btn, event) {
         event.stopPropagation();
         event.preventDefault();
     }
-    const parent = btn.parentElement.parentElement;
-    const editable = parent.querySelector('.editable');
-    if (editable) {
-        saveEdit(editable);
+    // 使用closest向上查找到包含编辑内容的容器
+    const container = btn.closest('.idea-title, .idea-content');
+    if (container) {
+        const editable = container.querySelector('.editable');
+        if (editable) {
+            saveEdit(editable);
+        } else {
+            console.warn('⚠️ 无法找到可编辑元素');
+        }
     }
     return false;
 }
@@ -115,10 +113,15 @@ function cancelEditBtn(btn, event) {
         event.stopPropagation();
         event.preventDefault();
     }
-    const parent = btn.parentElement.parentElement;
-    const editable = parent.querySelector('.editable');
-    if (editable) {
-        cancelEdit(editable);
+    // 使用closest向上查找到包含编辑内容的容器
+    const container = btn.closest('.idea-title, .idea-content');
+    if (container) {
+        const editable = container.querySelector('.editable');
+        if (editable) {
+            cancelEdit(editable);
+        } else {
+            console.warn('⚠️ 无法找到可编辑元素');
+        }
     }
     return false;
 }
