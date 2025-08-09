@@ -52,17 +52,20 @@ function startEdit(elem) {
     sel.removeAllRanges();
     sel.addRange(range);
     
-    // 显示保存/取消按钮
-    const parent = elem.parentElement;
-    const controls = parent.querySelector('.edit-controls');
-    if (controls) {
-        controls.classList.add('show');
-    }
-    
-    // 隐藏编辑图标
-    const editIcon = parent.querySelector('.edit-icon');
-    if (editIcon) {
-        editIcon.style.display = 'none';
+    // 使用closest查找容器
+    const container = elem.closest('.idea-title, .idea-content');
+    if (container) {
+        // 显示保存/取消按钮
+        const controls = container.querySelector('.edit-controls');
+        if (controls) {
+            controls.classList.add('show');
+        }
+        
+        // 隐藏编辑图标
+        const editIcon = container.querySelector('.edit-icon');
+        if (editIcon) {
+            editIcon.style.display = 'none';
+        }
     }
     
     // 添加键盘事件
@@ -73,17 +76,21 @@ function startEdit(elem) {
 function handleKeyDown(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        const parent = e.target.parentElement;
-        const saveBtn = parent.querySelector('.save-btn');
-        if (saveBtn) {
-            saveBtn.click();
+        const container = e.target.closest('.idea-title, .idea-content');
+        if (container) {
+            const saveBtn = container.querySelector('.save-btn');
+            if (saveBtn) {
+                saveBtn.click();
+            }
         }
     } else if (e.key === 'Escape') {
         e.preventDefault();
-        const parent = e.target.parentElement;
-        const cancelBtn = parent.querySelector('.cancel-btn');
-        if (cancelBtn) {
-            cancelBtn.click();
+        const container = e.target.closest('.idea-title, .idea-content');
+        if (container) {
+            const cancelBtn = container.querySelector('.cancel-btn');
+            if (cancelBtn) {
+                cancelBtn.click();
+            }
         }
     }
 }
@@ -140,19 +147,23 @@ function saveEdit(elem) {
     elem.contentEditable = false;
     elem.classList.remove('editing');
     
+    // 使用closest查找容器
+    const container = elem.closest('.idea-title, .idea-content');
+    
     // 使用setTimeout确保DOM更新完成
     setTimeout(() => {
-        // 隐藏控制按钮
-        const parent = elem.parentElement;
-        const controls = parent.querySelector('.edit-controls');
-        if (controls) {
-            controls.classList.remove('show');
-        }
-        
-        // 显示编辑图标
-        const editIcon = parent.querySelector('.edit-icon');
-        if (editIcon) {
-            editIcon.style.display = '';
+        if (container) {
+            // 隐藏控制按钮
+            const controls = container.querySelector('.edit-controls');
+            if (controls) {
+                controls.classList.remove('show');
+            }
+            
+            // 显示编辑图标
+            const editIcon = container.querySelector('.edit-icon');
+            if (editIcon) {
+                editIcon.style.display = '';
+            }
         }
     }, 10);
     
@@ -186,19 +197,23 @@ function cancelEdit(elem) {
     elem.contentEditable = false;
     elem.classList.remove('editing');
     
+    // 使用closest查找容器
+    const container = elem.closest('.idea-title, .idea-content');
+    
     // 使用setTimeout确保DOM更新完成
     setTimeout(() => {
-        // 隐藏控制按钮
-        const parent = elem.parentElement;
-        const controls = parent.querySelector('.edit-controls');
-        if (controls) {
-            controls.classList.remove('show');
-        }
-        
-        // 显示编辑图标
-        const editIcon = parent.querySelector('.edit-icon');
-        if (editIcon) {
-            editIcon.style.display = '';
+        if (container) {
+            // 隐藏控制按钮
+            const controls = container.querySelector('.edit-controls');
+            if (controls) {
+                controls.classList.remove('show');
+            }
+            
+            // 显示编辑图标
+            const editIcon = container.querySelector('.edit-icon');
+            if (editIcon) {
+                editIcon.style.display = '';
+            }
         }
     }, 10);
     
