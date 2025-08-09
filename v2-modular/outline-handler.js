@@ -331,7 +331,7 @@ function createEmptyOutlineStructure() {
     
     sectionInfo.forEach(section => {
         const sectionDiv = document.createElement('div');
-        sectionDiv.className = 'outline-section bg-white rounded-lg p-4 shadow-sm border border-gray-200';
+        sectionDiv.className = 'outline-section bg-white rounded-xl p-4 shadow-sm border border-gray-200';
         sectionDiv.innerHTML = `
             <h4 class="text-lg font-semibold text-gray-800 mb-2 flex items-center">
                 <i class="fas fa-${section.icon} text-${section.color}-500 mr-2"></i>
@@ -399,19 +399,25 @@ function showOutlineControls() {
     
     const controlsDiv = document.createElement('div');
     controlsDiv.id = 'outlineControls';
-    controlsDiv.className = 'mt-6 p-4 bg-gray-50 rounded-lg';
+    controlsDiv.className = 'mt-6';
     controlsDiv.innerHTML = `
-        <div class="flex items-center gap-4">
-            <input 
-                type="text" 
-                id="outlineOptimizeInput" 
-                class="flex-1 p-2 rounded border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-200" 
-                placeholder="输入优化建议（可选）">
-            <button 
-                onclick="regenerateOutline()" 
-                class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium transition-colors">
-                <i class="fas fa-sync-alt mr-2"></i>重新生成
-            </button>
+        <!-- 优化建议输入区（与脑洞样式完全一致） -->
+        <div class="bg-gray-50 rounded-xl p-4">
+            <div class="flex flex-col md:flex-row items-center gap-4">
+                <div class="relative flex-1 w-full">
+                    <input 
+                        type="text" 
+                        id="outlineOptimizeInput" 
+                        class="w-full p-3 pl-10 rounded-lg border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all" 
+                        placeholder="输入优化建议，比如：需要更多情感冲突...">
+                    <i class="fas fa-comment-dots text-gray-400 absolute left-3 top-3.5"></i>
+                </div>
+                <button 
+                    onclick="regenerateOutline()" 
+                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-6 rounded-lg font-medium transition-colors flex items-center">
+                    <i class="fas fa-sync-alt mr-2"></i>重新生成
+                </button>
+            </div>
         </div>
     `;
     container.appendChild(controlsDiv);
@@ -426,8 +432,12 @@ function enableEditMode(element) {
     const controls = document.createElement('div');
     controls.className = 'edit-controls mt-2 flex gap-2';
     controls.innerHTML = `
-        <button class="save-btn px-3 py-1 bg-green-500 text-white rounded text-sm">保存</button>
-        <button class="cancel-btn px-3 py-1 bg-red-500 text-white rounded text-sm">取消</button>
+        <button class="save-btn px-3 py-1 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600 transition-colors">
+            <i class="fas fa-check mr-1"></i>保存
+        </button>
+        <button class="cancel-btn px-3 py-1 bg-red-500 text-white rounded-lg text-sm hover:bg-red-600 transition-colors">
+            <i class="fas fa-times mr-1"></i>取消
+        </button>
     `;
     
     element.parentNode.appendChild(controls);
