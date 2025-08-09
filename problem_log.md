@@ -234,6 +234,7 @@ class WorkflowDataManager {
 - ✅ 项目启动，需求分析完成
 - ✅ 创建problem_log.md文档
 - ✅ 完成架构分析
+- ✅ 创建静态横向进程式布局demo (demo-horizontal.html)
 - 🔄 开始实施第一阶段
 
 ## 下一步行动计划
