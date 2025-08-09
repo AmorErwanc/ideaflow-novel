@@ -5,19 +5,19 @@ const outlineParserState = {
     currentTag: null,
     buffer: '',
     outline: {
-        opening: '',
-        development: '',
-        climax: '',
-        conclusion: ''
+        open: '',
+        build: '',
+        turn: '',
+        end: ''
     },
     lastProcessedIndex: 0,
     tagBuffer: '',
-    outlineStarted: false,
+    plotStarted: false,
     tagsCompleted: {
-        opening: false,
-        development: false,
-        climax: false,
-        conclusion: false
+        open: false,
+        build: false,
+        turn: false,
+        end: false
     }
 };
 
@@ -162,9 +162,14 @@ async function regenerateOutline() {
             session_id: getSessionId()
         };
         
-        // 如果有优化建议，添加之前的大纲
+        // 如果有优化建议，添加之前的大纲（映射字段名称）
         if (optimization) {
-            requestBody.previous_outline = outlineParserState.outline;
+            requestBody.previous_outline = {
+                opening: outlineParserState.outline.open,
+                development: outlineParserState.outline.build,
+                climax: outlineParserState.outline.turn,
+                conclusion: outlineParserState.outline.end
+            };
         }
         
         console.log('🔄 发送重新生成大纲请求:', requestBody);
@@ -215,19 +220,19 @@ function resetOutlineParserState() {
     outlineParserState.currentTag = null;
     outlineParserState.buffer = '';
     outlineParserState.outline = {
-        opening: '',
-        development: '',
-        climax: '',
-        conclusion: ''
+        open: '',
+        build: '',
+        turn: '',
+        end: ''
     };
     outlineParserState.lastProcessedIndex = 0;
     outlineParserState.tagBuffer = '';
-    outlineParserState.outlineStarted = false;
+    outlineParserState.plotStarted = false;
     outlineParserState.tagsCompleted = {
-        opening: false,
-        development: false,
-        climax: false,
-        conclusion: false
+        open: false,
+        build: false,
+        turn: false,
+        end: false
     };
 }
 
@@ -257,10 +262,10 @@ function detectAndProcessOutlineXML() {
     const buffer = outlineParserState.buffer;
     const tagBuffer = outlineParserState.tagBuffer;
     
-    // 检测<outline>标签开始
-    if (!outlineParserState.outlineStarted && tagBuffer.endsWith('<outline>')) {
-        console.log('📚 检测到outline标签开始');
-        outlineParserState.outlineStarted = true;
+    // 检测<plot>标签开始
+    if (!outlineParserState.plotStarted && tagBuffer.endsWith('<plot>')) {
+        console.log('📚 检测到plot标签开始');
+        outlineParserState.plotStarted = true;
         outlineParserState.buffer = '';
         
         // 隐藏加载动画，显示大纲容器
@@ -277,17 +282,17 @@ function detectAndProcessOutlineXML() {
     }
     
     // 检测各个部分的标签
-    const sections = ['opening', 'development', 'climax', 'conclusion'];
+    const sections = ['open', 'build', 'turn', 'end'];
     const sectionTitles = {
-        opening: '起：开篇',
-        development: '承：发展',
-        climax: '转：高潮',
-        conclusion: '合：结局'
+        open: '起：开篇',
+        build: '承：发展',
+        turn: '转：高潮',
+        end: '合：结局'
     };
     
     for (const section of sections) {
         // 检测标签开始
-        if (outlineParserState.outlineStarted && tagBuffer.endsWith(`<${section}>`)) {
+        if (outlineParserState.plotStarted && tagBuffer.endsWith(`<${section}>`)) {
             console.log(`📝 ${sectionTitles[section]}开始`);
             outlineParserState.currentTag = section;
             outlineParserState.buffer = '';
@@ -320,10 +325,10 @@ function detectAndProcessOutlineXML() {
         }
     }
     
-    // 检测</outline>标签结束
-    if (outlineParserState.outlineStarted && tagBuffer.endsWith('</outline>')) {
+    // 检测</plot>标签结束
+    if (outlineParserState.plotStarted && tagBuffer.endsWith('</plot>')) {
         console.log('✅ 大纲解析完成');
-        outlineParserState.outlineStarted = false;
+        outlineParserState.plotStarted = false;
         outlineParserState.buffer = '';
         finalizeOutline();
     }
@@ -335,10 +340,10 @@ function createEmptyOutlineStructure() {
     if (!container) return;
     
     const sectionInfo = [
-        { id: 'opening', title: '起：开篇', icon: 'play-circle', color: 'green' },
-        { id: 'development', title: '承：发展', icon: 'forward', color: 'blue' },
-        { id: 'climax', title: '转：高潮', icon: 'bolt', color: 'yellow' },
-        { id: 'conclusion', title: '合：结局', icon: 'flag-checkered', color: 'purple' }
+        { id: 'open', title: '起：开篇', icon: 'play-circle', color: 'green' },
+        { id: 'build', title: '承：发展', icon: 'forward', color: 'blue' },
+        { id: 'turn', title: '转：高潮', icon: 'bolt', color: 'yellow' },
+        { id: 'end', title: '合：结局', icon: 'flag-checkered', color: 'purple' }
     ];
     
     sectionInfo.forEach(section => {
