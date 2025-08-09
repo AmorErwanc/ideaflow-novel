@@ -475,7 +475,7 @@ function showOutlineLoading(isRegenerate = false) {
         </div>
     `;
     
-    // 5秒后更新提示文字
+    // 10秒后更新提示文字
     setTimeout(() => {
         const loadingText = container.querySelector('.stream-loading-text');
         const subText = loadingText ? loadingText.nextElementSibling : null;
@@ -485,7 +485,7 @@ function showOutlineLoading(isRegenerate = false) {
         if (subText) {
             subText.textContent = '生成起承转合中';
         }
-    }, 5000);
+    }, 10000);
 }
 
 // 隐藏大纲加载动画
