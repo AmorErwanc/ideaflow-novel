@@ -170,6 +170,74 @@
 
     <!-- 主内容区 -->
     <main class="max-w-7xl mx-auto py-8 px-4">
+        <!-- 输入区域 - 新增 -->
+        <div class="bg-white rounded-xl shadow-xl p-6 mb-6">
+            <div class="flex items-start gap-6">
+                <div class="flex-1">
+                    <div class="flex items-center mb-3">
+                        <i class="fas fa-magic text-purple-500 text-xl mr-3"></i>
+                        <h3 class="text-lg font-semibold text-gray-800">创作灵感输入</h3>
+                    </div>
+                    <div class="relative">
+                        <textarea 
+                            id="novelPrompt" 
+                            class="w-full p-4 pr-12 rounded-lg border-2 border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all resize-none" 
+                            rows="3" 
+                            placeholder="描述你想要的小说类型、主题或任何创意想法...&#10;例如：写一个关于未来世界人工智能与人类共存的科幻小说，主角是一名量子程序员..."></textarea>
+                        <div class="absolute right-3 top-3 flex flex-col gap-2">
+                            <button class="text-gray-400 hover:text-purple-500 transition-colors" title="使用AI优化">
+                                <i class="fas fa-wand-magic-sparkles"></i>
+                            </button>
+                            <button class="text-gray-400 hover:text-red-500 transition-colors" title="清空">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between mt-3">
+                        <div class="flex items-center gap-4 text-sm text-gray-500">
+                            <span><i class="fas fa-keyboard mr-1"></i>字数: <span id="charCount">0</span></span>
+                            <span><i class="fas fa-lightbulb mr-1"></i>创意度: <span class="text-purple-500 font-semibold">高</span></span>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all text-sm font-medium">
+                                <i class="fas fa-dice mr-1"></i>随机灵感
+                            </button>
+                            <button class="px-6 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:shadow-lg transition-all text-sm font-medium">
+                                <i class="fas fa-play mr-1"></i>开始创作
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 快速选项面板 -->
+                <div class="w-64 border-l pl-6">
+                    <h4 class="text-sm font-semibold text-gray-700 mb-3">快速选项</h4>
+                    <div class="space-y-2">
+                        <label class="flex items-center text-sm">
+                            <input type="checkbox" class="mr-2 rounded text-purple-500">
+                            <span>包含浪漫元素</span>
+                        </label>
+                        <label class="flex items-center text-sm">
+                            <input type="checkbox" class="mr-2 rounded text-purple-500">
+                            <span>添加悬疑情节</span>
+                        </label>
+                        <label class="flex items-center text-sm">
+                            <input type="checkbox" class="mr-2 rounded text-purple-500">
+                            <span>开放式结局</span>
+                        </label>
+                    </div>
+                    <div class="mt-4">
+                        <label class="text-sm font-semibold text-gray-700">篇幅长度</label>
+                        <select class="mt-1 w-full px-3 py-2 rounded-lg border border-gray-200 text-sm">
+                            <option>短篇 (5千字)</option>
+                            <option selected>中篇 (2万字)</option>
+                            <option>长篇 (10万字)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- 进度指示器 -->
         <div class="bg-white rounded-xl shadow-xl p-6 mb-8">
             <div class="mb-4">
@@ -548,6 +616,76 @@
                 }
             });
         });
+        
+        // 字数统计功能
+        const novelPrompt = document.getElementById('novelPrompt');
+        const charCount = document.getElementById('charCount');
+        
+        novelPrompt.addEventListener('input', function() {
+            charCount.textContent = this.value.length;
+        });
+        
+        // 清空按钮功能
+        document.querySelector('.fa-times').parentElement.addEventListener('click', function() {
+            novelPrompt.value = '';
+            charCount.textContent = '0';
+            novelPrompt.focus();
+        });
+        
+        // 随机灵感功能
+        const randomIdeas = [
+            "在一个所有人都失去做梦能力的世界里，一个小女孩突然开始做梦...",
+            "未来的地球已经不适合居住，人类通过虚拟现实生活，直到系统出现了bug...",
+            "一家古老的书店，每本书都通向不同的平行世界...",
+            "AI管家发现了主人的秘密，这个秘密关系到全人类的命运...",
+            "时间倒流24小时，但只有主角保留了记忆..."
+        ];
+        
+        document.querySelector('.fa-dice').parentElement.addEventListener('click', function() {
+            const randomIdea = randomIdeas[Math.floor(Math.random() * randomIdeas.length)];
+            novelPrompt.value = randomIdea;
+            charCount.textContent = randomIdea.length;
+            
+            // 添加动画效果
+            novelPrompt.style.animation = 'none';
+            setTimeout(() => {
+                novelPrompt.style.animation = 'fadeIn 0.5s ease';
+            }, 10);
+        });
+        
+        // AI优化按钮提示
+        document.querySelector('.fa-wand-magic-sparkles').parentElement.addEventListener('click', function() {
+            if (novelPrompt.value.trim()) {
+                alert('AI优化功能将在连接后端后启用');
+            } else {
+                alert('请先输入一些内容');
+            }
+        });
+        
+        // 开始创作按钮
+        document.querySelector('.fa-play').parentElement.addEventListener('click', function() {
+            if (novelPrompt.value.trim() || confirm('未输入任何内容，是否使用随机灵感？')) {
+                if (!novelPrompt.value.trim()) {
+                    // 使用随机灵感
+                    document.querySelector('.fa-dice').parentElement.click();
+                }
+                // 跳转到第一步
+                currentStep = 1;
+                updateUI();
+                // 滚动到进度指示器
+                document.querySelector('.bg-white.rounded-xl.shadow-xl.p-6.mb-8').scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+        
+        // 添加淡入动画
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
         
         // 初始化
         updateUI();
