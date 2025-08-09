@@ -221,3 +221,7 @@ function showSaveHint() {
         hint.classList.remove('show');
     }, 2000);
 }
+
+// 将函数暴露到全局作用域，以便HTML中的onclick可以调用
+window.saveEditBtn = saveEditBtn;
+window.cancelEditBtn = cancelEditBtn;
