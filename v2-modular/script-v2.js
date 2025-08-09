@@ -248,6 +248,19 @@ function goToNovelStep() {
     }, 500);
 }
 
+// 跳转到脚本步骤并生成
+function goToScriptStep() {
+    // 跳转到脚本页面
+    goToStep(5);
+    
+    // 如果还没有生成脚本，自动生成
+    setTimeout(() => {
+        if (!document.getElementById('scriptText')?.textContent) {
+            generateScript();
+        }
+    }, 500);
+}
+
 // 切换到下一步
 function nextStep() {
     // 找到下一个有效步骤

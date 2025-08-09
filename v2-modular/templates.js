@@ -190,7 +190,7 @@ const pageTemplates = {
             <button onclick="prevStep()" class="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-300 transition-all">
                 <i class="fas fa-arrow-left mr-2"></i>返回
             </button>
-            <button onclick="generateScript()" id="generateScriptBtn" class="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-8 py-3 rounded-lg font-medium hover:shadow-lg transition-all">
+            <button onclick="goToScriptStep()" id="generateScriptBtn" class="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-8 py-3 rounded-lg font-medium hover:shadow-lg transition-all">
                 下一步: 生成脚本 <i class="fas fa-arrow-right ml-2"></i>
             </button>
         </div>
@@ -214,7 +214,7 @@ const pageTemplates = {
             <button onclick="prevStep()" class="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-300 transition-all">
                 <i class="fas fa-arrow-left mr-2"></i>返回
             </button>
-            <button onclick="completeWorkflow()" class="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-8 py-3 rounded-lg font-medium hover:shadow-lg transition-all">
+            <button onclick="completeWorkflow()" id="completeWorkflowBtn" class="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-8 py-3 rounded-lg font-medium hover:shadow-lg transition-all">
                 <i class="fas fa-check-circle mr-2"></i>完成创作
             </button>
         </div>
