@@ -30,8 +30,8 @@ function createEmptyStoryCard(storyNum) {
                 <button class="cancel-btn" onclick="cancelEditBtn(this, event); return false;"><i class="fas fa-times"></i> 取消</button>
             </span>
         </p>
-        <button class="select-idea-btn" disabled style="opacity: 0.3">
-            加载中...
+        <button class="select-idea-btn" disabled>
+            <i class="fas fa-spinner fa-spin mr-2"></i>加载中...
         </button>
     `;
     
@@ -116,11 +116,13 @@ function finalizeStoryCard(storyNum) {
     const btn = card.querySelector('.select-idea-btn');
     if (btn) {
         btn.disabled = false;
-        btn.style.opacity = '1';
+        btn.removeAttribute('style'); // 移除内联样式
         btn.textContent = '选择这个脑洞';
-        btn.addEventListener('click', () => {
+        // 避免重复添加事件监听器
+        btn.onclick = (e) => {
+            e.stopPropagation();
             selectIdea(storyNum);
-        });
+        };
     }
     
     card.classList.add('card-complete');
