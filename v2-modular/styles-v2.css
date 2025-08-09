@@ -361,52 +361,6 @@
     }
 }
 
-/* 大纲加载动画样式（与脑洞一致） */
-.outline-stream-loading {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 400px;
-    animation: fadeIn 0.5s ease-out;
-}
-
-.outline-stream-loading .stream-loading-container {
-    text-align: center;
-    padding: 2rem;
-}
-
-.outline-stream-loading .stream-loading-animation {
-    display: flex;
-    justify-content: center;
-    gap: 0.5rem;
-    margin-bottom: 1.5rem;
-}
-
-.outline-stream-loading .stream-dot {
-    width: 12px;
-    height: 12px;
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    border-radius: 50%;
-    animation: stream-dot-pulse 1.4s ease-in-out infinite;
-    box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-}
-
-.outline-stream-loading .stream-dot:nth-child(1) {
-    animation-delay: -0.32s;
-}
-
-.outline-stream-loading .stream-dot:nth-child(2) {
-    animation-delay: -0.16s;
-}
-
-.outline-stream-loading .stream-loading-text {
-    font-size: 1.125rem;
-    color: #374151;
-    font-weight: 500;
-    margin-bottom: 0.5rem;
-    animation: text-fade 0.8s ease-out;
-}
-
 /* 卡片样式 - 悬浮效果增强 */
 .idea-card {
     background: white;

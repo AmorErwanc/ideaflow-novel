@@ -452,20 +452,21 @@ function enableEditMode(element) {
     };
 }
 
-// 显示大纲加载动画（与脑洞风格一致）
+// 显示大纲加载动画（完全复用脑洞的样式）
 function showOutlineLoading(isRegenerate = false) {
     const container = document.getElementById('outlineContainer');
     if (!container) return;
     
+    // 完全使用和脑洞一样的HTML结构和class
     container.innerHTML = `
-        <div id="outlineStreamLoading" class="outline-stream-loading">
+        <div id="outlineStreamLoading" class="stream-loading">
             <div class="stream-loading-container">
                 <div class="stream-loading-animation">
                     <div class="stream-dot"></div>
                     <div class="stream-dot"></div>
                     <div class="stream-dot"></div>
                 </div>
-                <p class="stream-loading-text" id="outlineLoadingText">正在分析脑洞内容...</p>
+                <p class="stream-loading-text">正在分析脑洞内容...</p>
                 <p class="text-sm text-gray-500 mt-2">AI正在理解故事核心，准备构建大纲</p>
                 <div class="loading-progress-bar">
                     <div class="loading-progress-fill"></div>
@@ -474,33 +475,19 @@ function showOutlineLoading(isRegenerate = false) {
         </div>
     `;
     
-    // 根据是否重新生成设置初始文案
-    const loadingText = document.getElementById('outlineLoadingText');
-    if (isRegenerate && loadingText) {
-        loadingText.textContent = '正在重新分析脑洞内容...';
-    }
-    
-    // 第一阶段：分析阶段（3秒）
+    // 3秒后更新提示文字（和脑洞一样的时间间隔）
     setTimeout(() => {
-        const loadingText = document.getElementById('outlineLoadingText');
+        const loadingText = container.querySelector('.stream-loading-text');
         if (loadingText) {
-            loadingText.textContent = '正在构思起承转合结构...';
-            const subText = loadingText.nextElementSibling;
-            if (subText) {
-                subText.textContent = 'AI深度创作中，即将开始流式输出';
-            }
+            loadingText.textContent = 'AI正在深度创作，构思起承转合结构...';
         }
     }, 3000);
     
-    // 第二阶段：即将输出提示（6秒）
+    // 6秒后再次更新（大纲特有的第二阶段）
     setTimeout(() => {
-        const loadingText = document.getElementById('outlineLoadingText');
+        const loadingText = container.querySelector('.stream-loading-text');
         if (loadingText) {
             loadingText.textContent = '大纲框架已完成，准备流式展示...';
-            const subText = loadingText.nextElementSibling;
-            if (subText) {
-                subText.textContent = '马上就好，起承转合内容即将呈现';
-            }
         }
     }, 6000);
 }
