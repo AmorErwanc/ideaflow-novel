@@ -24,10 +24,7 @@ async function startStreamingIdeas(userInput = null) {
         // 调用API
         const response = await generateIdeasAPI(mode, userInput, count);
         
-        // 隐藏加载动画
-        hideStreamLoading();
-        
-        // 重置解析状态
+        // 重置解析状态（加载动画将在检测到第一个<s1>时隐藏）
         resetParserState();
         
         // 处理流式响应
@@ -118,10 +115,7 @@ async function regenerateIdeas() {
             previousIdeas
         );
         
-        // 隐藏加载动画
-        hideStreamLoading();
-        
-        // 重置解析状态
+        // 重置解析状态（加载动画将在检测到第一个<s1>时隐藏）
         resetParserState();
         
         // 处理流式响应
@@ -192,6 +186,7 @@ function resetParserState() {
     parserState.stories.clear();
     parserState.lastProcessedIndex = 0;
     parserState.tagBuffer = '';
+    parserState.firstStoryDetected = false; // 添加标志位
 }
 
 // 处理流式内容
@@ -223,6 +218,13 @@ function detectAndProcessSimplifiedXML() {
     if (storyStartMatch) {
         const storyNum = storyStartMatch[1];
         console.log(`📖 检测到story ${storyNum} 开始`);
+        
+        // 第一个故事开始时，隐藏加载动画
+        if (!parserState.firstStoryDetected) {
+            parserState.firstStoryDetected = true;
+            hideStreamLoading();
+            console.log('🎬 第一个故事开始，隐藏加载动画');
+        }
         
         parserState.currentStoryNum = storyNum;
         parserState.currentTag = null;
@@ -361,11 +363,18 @@ function showStreamLoading() {
     }, 3000);
 }
 
-// 隐藏流式加载动画
+// 隐藏流式加载动画（带渐隐效果）
 function hideStreamLoading() {
     const loadingDiv = document.getElementById('streamLoading');
     if (loadingDiv) {
-        loadingDiv.remove();
+        // 添加渐隐效果
+        loadingDiv.style.transition = 'opacity 0.3s ease-out';
+        loadingDiv.style.opacity = '0';
+        
+        // 300ms后移除元素
+        setTimeout(() => {
+            loadingDiv.remove();
+        }, 300);
     }
 }
 
