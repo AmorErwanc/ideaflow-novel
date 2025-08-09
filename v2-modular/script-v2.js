@@ -19,14 +19,16 @@ const stepInfo = {
 // 进度条显示的步骤（不包含创意输入）
 const visibleSteps = [0, 2, 3, 4, 5];
 
-// 解析状态管理 - 针对极简格式优化
+// 解析状态管理 - 针对新的XML格式
 const parserState = {
-    currentStoryNum: null,
+    currentStoryNum: 0,  // 故事编号（自动递增）
     currentTag: null,
     buffer: '',
     stories: new Map(),
     lastProcessedIndex: 0,
-    tagBuffer: ''
+    tagBuffer: '',
+    inStory: false,  // 是否在story标签内
+    storiesStarted: false  // 是否检测到stories标签
 };
 
 // 快速生成模式 - 直接跳到脑洞生成

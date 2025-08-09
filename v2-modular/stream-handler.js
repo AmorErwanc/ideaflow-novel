@@ -27,7 +27,7 @@ async function startStreamingIdeas(userInput = null) {
         // 调用API
         const response = await generateIdeasAPI(mode, userInput, count);
         
-        // 重置解析状态（加载动画将在检测到第一个<s1>时隐藏）
+        // 重置解析状态（加载动画将在检测到第一个<story>时隐藏）
         resetParserState();
         
         // 处理流式响应
@@ -118,7 +118,7 @@ async function regenerateIdeas() {
             previousIdeas
         );
         
-        // 重置解析状态（加载动画将在检测到第一个<s1>时隐藏）
+        // 重置解析状态（加载动画将在检测到第一个<story>时隐藏）
         resetParserState();
         
         // 处理流式响应
@@ -183,13 +183,15 @@ function simulateStreamingOutput() {
 
 // 重置解析状态
 function resetParserState() {
-    parserState.currentStoryNum = null;
+    parserState.currentStoryNum = 0;
     parserState.currentTag = null;
     parserState.buffer = '';
     parserState.stories.clear();
     parserState.lastProcessedIndex = 0;
     parserState.tagBuffer = '';
     parserState.firstStoryDetected = false; // 添加标志位
+    parserState.inStory = false;
+    parserState.storiesStarted = false;
 }
 
 // 处理流式内容
@@ -212,14 +214,23 @@ function processStreamContent(fullContent) {
     parserState.lastProcessedIndex = fullContent.length;
 }
 
-// 检测并处理简化的XML格式
+// 检测并处理新的XML格式
 function detectAndProcessSimplifiedXML() {
     const buffer = parserState.buffer;
     const tagBuffer = parserState.tagBuffer;
     
-    const storyStartMatch = tagBuffer.match(/<s(\d+)>$/);
-    if (storyStartMatch) {
-        const storyNum = storyStartMatch[1];
+    // 检测<stories>标签开始
+    if (!parserState.storiesStarted && tagBuffer.endsWith('<stories>')) {
+        console.log('📚 检测到stories标签开始');
+        parserState.storiesStarted = true;
+        parserState.buffer = '';
+        return;
+    }
+    
+    // 检测<story>标签开始
+    if (parserState.storiesStarted && !parserState.inStory && tagBuffer.endsWith('<story>')) {
+        parserState.currentStoryNum++;
+        const storyNum = String(parserState.currentStoryNum);
         console.log(`📖 检测到story ${storyNum} 开始`);
         
         // 第一个故事开始时，隐藏加载动画
@@ -229,7 +240,7 @@ function detectAndProcessSimplifiedXML() {
             console.log('🎬 第一个故事开始，隐藏加载动画');
         }
         
-        parserState.currentStoryNum = storyNum;
+        parserState.inStory = true;
         parserState.currentTag = null;
         
         parserState.stories.set(storyNum, {
@@ -248,22 +259,26 @@ function detectAndProcessSimplifiedXML() {
         return;
     }
     
-    if (parserState.currentStoryNum && tagBuffer.endsWith('<t>')) {
-        console.log(`📝 Story ${parserState.currentStoryNum} 标题开始`);
-        const story = parserState.stories.get(parserState.currentStoryNum);
+    // 检测<title>标签开始
+    if (parserState.inStory && tagBuffer.endsWith('<title>')) {
+        const storyNum = String(parserState.currentStoryNum);
+        console.log(`📝 Story ${storyNum} 标题开始`);
+        const story = parserState.stories.get(storyNum);
         if (story) {
             story.titleStarted = true;
-            parserState.currentTag = 't';
+            parserState.currentTag = 'title';
             parserState.buffer = '';
         }
         return;
     }
     
-    if (parserState.currentTag === 't' && parserState.currentStoryNum) {
-        const story = parserState.stories.get(parserState.currentStoryNum);
+    // 处理title内容
+    if (parserState.currentTag === 'title' && parserState.inStory) {
+        const storyNum = String(parserState.currentStoryNum);
+        const story = parserState.stories.get(storyNum);
         if (story && story.titleStarted && !story.titleComplete) {
-            if (buffer.includes('</t>')) {
-                const titleContent = buffer.substring(0, buffer.indexOf('</t>'));
+            if (buffer.includes('</title>')) {
+                const titleContent = buffer.substring(0, buffer.indexOf('</title>'));
                 if (titleContent.length > story.title.length) {
                     const newChars = titleContent.substring(story.title.length);
                     appendToTitle(story.number, newChars);
@@ -283,23 +298,27 @@ function detectAndProcessSimplifiedXML() {
         }
     }
     
-    if (parserState.currentStoryNum && tagBuffer.endsWith('<c>')) {
-        console.log(`📄 Story ${parserState.currentStoryNum} 内容开始`);
-        const story = parserState.stories.get(parserState.currentStoryNum);
+    // 检测<content>标签开始
+    if (parserState.inStory && tagBuffer.endsWith('<content>')) {
+        const storyNum = String(parserState.currentStoryNum);
+        console.log(`📄 Story ${storyNum} 内容开始`);
+        const story = parserState.stories.get(storyNum);
         if (story) {
             story.contentStarted = true;
-            parserState.currentTag = 'c';
+            parserState.currentTag = 'content';
             parserState.buffer = '';
             removeTitleCursor(story.number);
         }
         return;
     }
     
-    if (parserState.currentTag === 'c' && parserState.currentStoryNum) {
-        const story = parserState.stories.get(parserState.currentStoryNum);
+    // 处理content内容
+    if (parserState.currentTag === 'content' && parserState.inStory) {
+        const storyNum = String(parserState.currentStoryNum);
+        const story = parserState.stories.get(storyNum);
         if (story && story.contentStarted && !story.contentComplete) {
-            if (buffer.includes('</c>')) {
-                const content = buffer.substring(0, buffer.indexOf('</c>'));
+            if (buffer.includes('</content>')) {
+                const content = buffer.substring(0, buffer.indexOf('</content>'));
                 if (content.length > story.content.length) {
                     const newChars = content.substring(story.content.length);
                     appendToContent(story.number, newChars);
@@ -319,17 +338,23 @@ function detectAndProcessSimplifiedXML() {
         }
     }
     
-    const storyEndMatch = tagBuffer.match(/<\/s(\d+)>$/);
-    if (storyEndMatch) {
-        const storyNum = storyEndMatch[1];
-        if (storyNum === parserState.currentStoryNum) {
-            const story = parserState.stories.get(storyNum);
-            console.log(`✅ Story ${storyNum} 完全结束`);
-            finalizeStoryCard(storyNum);
-            parserState.currentStoryNum = null;
-            parserState.currentTag = null;
-            parserState.buffer = '';
-        }
+    // 检测</story>标签结束
+    if (parserState.inStory && tagBuffer.endsWith('</story>')) {
+        const storyNum = String(parserState.currentStoryNum);
+        const story = parserState.stories.get(storyNum);
+        console.log(`✅ Story ${storyNum} 完全结束`);
+        finalizeStoryCard(storyNum);
+        parserState.inStory = false;
+        parserState.currentTag = null;
+        parserState.buffer = '';
+        return;
+    }
+    
+    // 检测</stories>标签结束
+    if (parserState.storiesStarted && tagBuffer.endsWith('</stories>')) {
+        console.log('✅ 所有故事解析完成');
+        parserState.storiesStarted = false;
+        parserState.buffer = '';
     }
 }
 
