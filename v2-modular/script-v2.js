@@ -170,16 +170,22 @@ function goToStep(step) {
     if (step === 3) {
         // 检查是否有缓存的大纲内容
         const cachedOutline = localStorage.getItem('currentOutline');
+        const outlineContainer = document.getElementById('outlineContainer');
         const outlineContent = document.getElementById('outlineContent');
+        const hasStreamLoading = outlineContainer?.querySelector('#outlineStreamLoading');
         
-        if (cachedOutline && outlineContent && !outlineContent.children.length) {
-            // 如果有缓存且容器为空，恢复缓存内容
-            restoreCachedOutline();
-        } else if (!cachedOutline && !document.getElementById('outlineContent')?.children.length) {
-            // 如果没有缓存且没有内容，自动生成
+        // 判断是否需要生成新的大纲（没有缓存或容器为空）
+        const needsGeneration = !cachedOutline || (!outlineContent && !hasStreamLoading);
+        
+        if (needsGeneration) {
+            // 需要生成新大纲
+            window.isGeneratingOutline = true;
             setTimeout(() => {
                 generateOutline();
             }, 500);
+        } else if (cachedOutline && !hasStreamLoading && !outlineContent?.children.length) {
+            // 有缓存且不在生成中，恢复缓存内容（tab切换场景）
+            restoreCachedOutline();
         }
     }
     // 如果跳转到小说步骤且还没有生成小说，自动生成
@@ -227,6 +233,8 @@ function nextStep() {
     } else if (currentStep === 2) {
         // 从脑洞生成到大纲创作
         currentStep = 3;
+        // 设置生成标记，防止缓存恢复
+        window.isGeneratingOutline = true;
         // 自动生成大纲
         setTimeout(() => {
             generateOutline();

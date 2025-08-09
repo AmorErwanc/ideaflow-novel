@@ -25,6 +25,9 @@ const outlineParserState = {
 async function generateOutline() {
     console.log('📝 开始生成大纲');
     
+    // 清除生成标记
+    window.isGeneratingOutline = false;
+    
     // 获取选中的脑洞
     if (!selectedIdea) {
         console.error('❌ 未选择脑洞');

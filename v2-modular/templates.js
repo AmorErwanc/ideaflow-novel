@@ -240,12 +240,18 @@ function loadStepContent(step) {
                 }
             } else if (step === 3) {
                 // 大纲步骤：检查是否有缓存内容
+                // 只在tab切换时恢复缓存，不在首次生成时恢复
                 const cachedOutline = localStorage.getItem('currentOutline');
-                if (cachedOutline) {
-                    // 如果有缓存，立即恢复
-                    setTimeout(() => {
-                        restoreCachedOutline();
-                    }, 100);
+                const isGenerating = window.isGeneratingOutline || false;
+                
+                if (cachedOutline && !isGenerating) {
+                    // 只在tab切换返回时恢复缓存
+                    const outlineContainer = document.getElementById('outlineContainer');
+                    if (outlineContainer && !outlineContainer.querySelector('#outlineStreamLoading')) {
+                        setTimeout(() => {
+                            restoreCachedOutline();
+                        }, 100);
+                    }
                 }
             }
         }
