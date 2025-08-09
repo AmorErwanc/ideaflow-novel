@@ -182,8 +182,10 @@ const pageTemplates = {
         </div>
         
         <!-- 小说内容容器 -->
-        <div id="novelContainer" class="bg-gray-50 rounded-xl p-6" style="max-height: 600px; overflow-y: auto;">
-            <!-- 动态生成的小说内容 -->
+        <div style="position: relative;">
+            <div id="novelContainer" class="bg-gray-50 rounded-xl p-6" style="max-height: 600px; overflow-y: auto;">
+                <!-- 动态生成的小说内容 -->
+            </div>
         </div>
         
         <div class="flex justify-between mt-6">
@@ -206,8 +208,10 @@ const pageTemplates = {
         </div>
         
         <!-- 脚本内容容器 -->
-        <div id="scriptContainer" class="bg-gray-50 rounded-xl p-6" style="max-height: 600px; overflow-y: auto;">
-            <!-- 动态生成的脚本内容 -->
+        <div style="position: relative;">
+            <div id="scriptContainer" class="bg-gray-50 rounded-xl p-6" style="max-height: 600px; overflow-y: auto;">
+                <!-- 动态生成的脚本内容 -->
+            </div>
         </div>
         
         <div class="flex justify-between mt-6">

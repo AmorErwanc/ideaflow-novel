@@ -29,6 +29,11 @@ async function generateNovel() {
     const container = document.getElementById('novelContainer');
     if (container) {
         showNovelLoading();
+        // 重置滚动管理器
+        const scrollManager = getScrollManager('novelContainer');
+        if (scrollManager) {
+            scrollManager.reset();
+        }
     }
     
     // 禁用按钮
@@ -235,6 +240,10 @@ function detectAndProcessNovelXML() {
                         </div>
                     </div>
                 `;
+                
+                // 初始化或重新初始化滚动管理器
+                const scrollManager = new ScrollManager('novelContainer');
+                scrollManagers['novelContainer'] = scrollManager;
             }
         }, 300);
         return;
@@ -288,10 +297,10 @@ function appendToNovelContent(newChars) {
         // 直接追加文本，不使用打字机效果
         wrapper.textContent += newChars;
         
-        // 自动滚动到底部
-        const container = document.getElementById('novelContainer');
-        if (container) {
-            container.scrollTop = container.scrollHeight;
+        // 使用智能滚动管理器
+        const scrollManager = getScrollManager('novelContainer');
+        if (scrollManager) {
+            scrollManager.scrollToBottom();
         }
     }
 }

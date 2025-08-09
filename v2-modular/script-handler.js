@@ -29,6 +29,11 @@ async function generateScript() {
     const container = document.getElementById('scriptContainer');
     if (container) {
         showScriptLoading();
+        // 重置滚动管理器
+        const scrollManager = getScrollManager('scriptContainer');
+        if (scrollManager) {
+            scrollManager.reset();
+        }
     }
     
     // 禁用完成按钮
@@ -225,6 +230,10 @@ function detectAndProcessScriptXML() {
                         </div>
                     </div>
                 `;
+                
+                // 初始化或重新初始化滚动管理器
+                const scrollManager = new ScrollManager('scriptContainer');
+                scrollManagers['scriptContainer'] = scrollManager;
             }
         }, 300);
         return;
@@ -278,10 +287,10 @@ function appendToScriptContent(newChars) {
         // 直接追加文本
         wrapper.textContent += newChars;
         
-        // 自动滚动到底部
-        const container = document.getElementById('scriptContainer');
-        if (container) {
-            container.scrollTop = container.scrollHeight;
+        // 使用智能滚动管理器
+        const scrollManager = getScrollManager('scriptContainer');
+        if (scrollManager) {
+            scrollManager.scrollToBottom();
         }
     }
 }
