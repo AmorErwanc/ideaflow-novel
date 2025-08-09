@@ -17,7 +17,9 @@
       "Bash(mv:*)",
       "mcp__zen__codereview",
       "Bash(ls:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(grep:*)",
+      "Bash(python3:*)"
     ],
     "deny": []
   }

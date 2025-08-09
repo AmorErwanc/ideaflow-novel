@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI小说创作平台</title>
+    <script src="https://cdn.tailwindcss.com/3.3.3"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="styles-v2.css">
+</head>
+<body class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <!-- 保存提示 -->
+    <div id="saveHint" class="save-hint">
+        <i class="fas fa-check-circle mr-2"></i>
+        <span>已自动保存</span>
+    </div>
+    
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-md py-2 px-4 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center">
+                <i class="fas fa-rocket text-lg text-green-600 mr-2"></i>
+                <span class="text-base font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                    AI小说创作平台
+                </span>
+            </div>
+            <div class="flex items-center gap-3">
+                <span id="modeIndicator" class="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium hidden">
+                    <i class="fas fa-bolt mr-1 text-xs"></i>灵感速写模式
+                </span>
+                <button class="text-gray-600 hover:text-gray-800 transition-colors text-sm">
+                    <i class="fas fa-save mr-1 text-sm"></i>保存
+                </button>
+                <button class="text-gray-600 hover:text-gray-800 transition-colors text-sm">
+                    <i class="fas fa-history mr-1 text-sm"></i>历史
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="max-w-7xl mx-auto py-6 px-4">
+        <!-- 进度指示器 - 只显示5个步骤 -->
+        <div class="bg-white rounded-lg shadow-lg p-4 mb-6 fade-in-delay-1">
+            <!-- 步骤指示器 - 5个步骤（不显示创意输入） -->
+            <div class="step-container">
+                <div class="step-wrapper flex items-center justify-between relative px-6 py-2">
+                    <!-- 连接线 -->
+                    <div class="absolute left-0 right-0 top-1/2 transform -translate-y-1/2 flex px-16">
+                        <div class="progress-line flex-1 mx-2" id="line0"></div>
+                        <div class="progress-line flex-1 mx-2" id="line1"></div>
+                        <div class="progress-line flex-1 mx-2" id="line2"></div>
+                        <div class="progress-line flex-1 mx-2" id="line3"></div>
+                    </div>
+                    
+                    <!-- 步骤节点 - 5个（可点击） -->
+                    <div class="step-node active cursor-pointer" data-step="0" data-display-index="0" onclick="goToStep(0)">
+                        <i class="fas fa-compass step-icon text-sm"></i>
+                    </div>
+                    <div class="step-node cursor-not-allowed opacity-50" data-step="2" data-display-index="1" onclick="goToStep(2)">
+                        <i class="fas fa-brain step-icon text-sm text-gray-400"></i>
+                    </div>
+                    <div class="step-node cursor-not-allowed opacity-50" data-step="3" data-display-index="2" onclick="goToStep(3)">
+                        <i class="fas fa-list-alt step-icon text-sm text-gray-400"></i>
+                    </div>
+                    <div class="step-node cursor-not-allowed opacity-50" data-step="4" data-display-index="3" onclick="goToStep(4)">
+                        <i class="fas fa-book step-icon text-sm text-gray-400"></i>
+                    </div>
+                    <div class="step-node cursor-not-allowed opacity-50" data-step="5" data-display-index="4" onclick="goToStep(5)">
+                        <i class="fas fa-film step-icon text-sm text-gray-400"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 步骤标签 - 5个（可点击） -->
+            <div class="flex justify-between px-6 mt-2 text-xs">
+                <button onclick="goToStep(0)" class="step-label text-sm font-medium text-green-600 hover:text-green-700 transition-colors cursor-pointer" data-step="0">模式选择</button>
+                <button onclick="goToStep(2)" class="step-label text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors cursor-pointer" data-step="2" disabled>脑洞生成</button>
+                <button onclick="goToStep(3)" class="step-label text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors cursor-pointer" data-step="3" disabled>大纲创作</button>
+                <button onclick="goToStep(4)" class="step-label text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors cursor-pointer" data-step="4" disabled>小说撰写</button>
+                <button onclick="goToStep(5)" class="step-label text-sm font-medium text-gray-400 hover:text-gray-600 transition-colors cursor-pointer" data-step="5" disabled>脚本生成</button>
+            </div>
+        </div>
+
+        <!-- 内容展示区 -->
+        <div class="bg-white rounded-xl shadow-xl p-8 fade-in-delay-2">
+            <!-- 步骤0: 模式选择 -->
+            <div id="step0Content" class="content-panel active">
+                <div class="mb-8">
+                    <h3 class="text-2xl font-bold text-gray-800 mb-2">
+                        <i class="fas fa-compass text-indigo-500 mr-2"></i>选择创作模式
+                    </h3>
+                    <p class="text-gray-600">选择适合你的创作方式，开启AI辅助创作之旅</p>
+                </div>
+                
+                <!-- 模式选择卡片 -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    <!-- 快速创作模式 -->
+                    <div class="mode-card bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-8 shadow-lg" data-mode="quick">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl">
+                                <i class="fas fa-bolt text-white text-2xl"></i>
+                            </div>
+                            <span class="tag bg-purple-100 text-purple-700">推荐</span>
+                        </div>
+                        <h4 class="text-xl font-bold text-gray-800 mb-3">灵感速写模式</h4>
+                        <p class="text-gray-600 mb-4">AI随机生成创意灵感，实时流式展现，适合寻找灵感或快速体验</p>
+                        <ul class="space-y-2 text-sm text-gray-600 mb-6">
+                            <li><i class="fas fa-check text-green-500 mr-2"></i>实时流式生成5-10个创意脑洞</li>
+                            <li><i class="fas fa-check text-green-500 mr-2"></i>极简XML格式，传输效率提升70%</li>
+                            <li><i class="fas fa-check text-green-500 mr-2"></i>打字机效果，沉浸式体验</li>
+                            <li><i class="fas fa-check text-green-500 mr-2"></i>快速开始，无需输入</li>
+                        </ul>
+                        <button onclick="handleQuickGenerate()" class="w-full py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all">
+                            <i class="fas fa-rocket mr-2"></i>开始快速创作
+                        </button>
+                    </div>
+                    
+                    <!-- 自定义模式 -->
+                    <div class="mode-card bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-8 shadow-lg" data-mode="custom">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="p-3 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl">
+                                <i class="fas fa-palette text-white text-2xl"></i>
+                            </div>
+                            <span class="tag bg-blue-100 text-blue-700">专业</span>
+                        </div>
+                        <h4 class="text-xl font-bold text-gray-800 mb-3">定制创作模式</h4>
+                        <p class="text-gray-600 mb-4">输入你的创意想法，AI根据你的需求定制化生成，完全掌控创作方向</p>
+                        <ul class="space-y-2 text-sm text-gray-600 mb-6">
+                            <li><i class="fas fa-check text-green-500 mr-2"></i>自由输入创作需求</li>
+                            <li><i class="fas fa-check text-green-500 mr-2"></i>细节参数可调整</li>
+                            <li><i class="fas fa-check text-green-500 mr-2"></i>每步可编辑优化</li>
+                            <li><i class="fas fa-check text-green-500 mr-2"></i>精准定制化生成</li>
+                        </ul>
+                        <button onclick="handleCustomMode()" class="w-full py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-semibold hover:shadow-lg transition-all">
+                            <i class="fas fa-pen-fancy mr-2"></i>开始定制创作
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 步骤1: 创意输入（仅用于定制模式，不在进度条显示） -->
+            <div id="step1Content" class="content-panel"></div>
+
+            <!-- 步骤2: 脑洞生成（流式输出） -->
+            <div id="step2Content" class="content-panel"></div>
+
+            <!-- 步骤3: 大纲创作 -->
+            <div id="step3Content" class="content-panel"></div>
+
+            <!-- 步骤4: 小说撰写 -->
+            <div id="step4Content" class="content-panel"></div>
+
+            <!-- 步骤5: 脚本生成 -->
+            <div id="step5Content" class="content-panel"></div>
+        </div>
+    </main>
+
+    <!-- JavaScript文件 -->
+    <script src="data-manager.js"></script>
+    <script src="edit-handler.js"></script>
+    <script src="card-handler.js"></script>
+    <script src="stream-handler.js"></script>
+    <script src="templates.js"></script>
+    <script src="api-handler.js"></script>
+    <script src="utils.js"></script>
+    <script src="script-v2.js"></script>
+</body>
+</html>
