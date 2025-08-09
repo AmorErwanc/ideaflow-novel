@@ -48,21 +48,10 @@ async function generateOutline() {
     
     console.log('📖 选中的脑洞:', ideaData);
     
-    // 清空容器并显示加载动画
+    // 清空容器并显示加载动画（与脑洞一致的样式）
     const container = document.getElementById('outlineContainer');
     if (container) {
-        container.innerHTML = `
-            <div class="outline-loading">
-                <div class="flex items-center justify-center py-8">
-                    <div class="flex gap-2">
-                        <div class="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
-                        <div class="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
-                        <div class="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
-                    </div>
-                </div>
-                <p class="text-center text-gray-600">正在生成故事大纲...</p>
-            </div>
-        `;
+        showOutlineLoading();
     }
     
     // 禁用按钮
@@ -139,18 +128,7 @@ async function regenerateOutline() {
     // 清空容器并显示加载动画
     const container = document.getElementById('outlineContainer');
     if (container) {
-        container.innerHTML = `
-            <div class="outline-loading">
-                <div class="flex items-center justify-center py-8">
-                    <div class="flex gap-2">
-                        <div class="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
-                        <div class="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
-                        <div class="w-3 h-3 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
-                    </div>
-                </div>
-                <p class="text-center text-gray-600">正在重新生成大纲...</p>
-            </div>
-        `;
+        showOutlineLoading(true); // true表示重新生成
     }
     
     try {
@@ -268,16 +246,21 @@ function detectAndProcessOutlineXML() {
         outlineParserState.plotStarted = true;
         outlineParserState.buffer = '';
         
-        // 隐藏加载动画，显示大纲容器
-        const container = document.getElementById('outlineContainer');
-        if (container) {
-            container.innerHTML = `
-                <div id="outlineContent" class="space-y-4">
-                    <!-- 大纲内容将在这里动态生成 -->
-                </div>
-            `;
-        }
-        createEmptyOutlineStructure();
+        // 隐藏加载动画（带渐隐效果）
+        hideOutlineLoading();
+        
+        // 延迟显示大纲容器，等待渐隐完成
+        setTimeout(() => {
+            const container = document.getElementById('outlineContainer');
+            if (container) {
+                container.innerHTML = `
+                    <div id="outlineContent" class="space-y-4 fade-in">
+                        <!-- 大纲内容将在这里动态生成 -->
+                    </div>
+                `;
+                createEmptyOutlineStructure();
+            }
+        }, 300);
         return;
     }
     
@@ -467,4 +450,72 @@ function enableEditMode(element) {
         element.setAttribute('contenteditable', 'false');
         controls.remove();
     };
+}
+
+// 显示大纲加载动画（与脑洞风格一致）
+function showOutlineLoading(isRegenerate = false) {
+    const container = document.getElementById('outlineContainer');
+    if (!container) return;
+    
+    container.innerHTML = `
+        <div id="outlineStreamLoading" class="outline-stream-loading">
+            <div class="stream-loading-container">
+                <div class="stream-loading-animation">
+                    <div class="stream-dot"></div>
+                    <div class="stream-dot"></div>
+                    <div class="stream-dot"></div>
+                </div>
+                <p class="stream-loading-text" id="outlineLoadingText">正在分析脑洞内容...</p>
+                <p class="text-sm text-gray-500 mt-2">AI正在理解故事核心，准备构建大纲</p>
+                <div class="loading-progress-bar">
+                    <div class="loading-progress-fill"></div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // 根据是否重新生成设置初始文案
+    const loadingText = document.getElementById('outlineLoadingText');
+    if (isRegenerate && loadingText) {
+        loadingText.textContent = '正在重新分析脑洞内容...';
+    }
+    
+    // 第一阶段：分析阶段（3秒）
+    setTimeout(() => {
+        const loadingText = document.getElementById('outlineLoadingText');
+        if (loadingText) {
+            loadingText.textContent = '正在构思起承转合结构...';
+            const subText = loadingText.nextElementSibling;
+            if (subText) {
+                subText.textContent = 'AI深度创作中，即将开始流式输出';
+            }
+        }
+    }, 3000);
+    
+    // 第二阶段：即将输出提示（6秒）
+    setTimeout(() => {
+        const loadingText = document.getElementById('outlineLoadingText');
+        if (loadingText) {
+            loadingText.textContent = '大纲框架已完成，准备流式展示...';
+            const subText = loadingText.nextElementSibling;
+            if (subText) {
+                subText.textContent = '马上就好，起承转合内容即将呈现';
+            }
+        }
+    }, 6000);
+}
+
+// 隐藏大纲加载动画
+function hideOutlineLoading() {
+    const loadingDiv = document.getElementById('outlineStreamLoading');
+    if (loadingDiv) {
+        // 添加渐隐效果
+        loadingDiv.style.transition = 'opacity 0.3s ease-out';
+        loadingDiv.style.opacity = '0';
+        
+        // 300ms后移除元素
+        setTimeout(() => {
+            loadingDiv.remove();
+        }, 300);
+    }
 }
