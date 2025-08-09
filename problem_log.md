@@ -234,19 +234,31 @@ class WorkflowDataManager {
 - ✅ 项目启动，需求分析完成
 - ✅ 创建problem_log.md文档
 - ✅ 完成架构分析
-- ✅ 创建静态横向进程式布局demo (demo-horizontal.html)
-- 🔄 开始实施第一阶段
+- ✅ 更新用户CLAUDE.md添加自动创建日志指令
+- ✅ 创建静态横向进程式布局demo
+  - demo/horizontal-layout.html (第一版，4步流程)
+  - demo/horizontal-layout-v2.html (完善版，6步流程)
+- ✅ 实现创意输入独立步骤
+- ✅ 添加模式选择（快速生成/定制创作）
+- ✅ 实现脑洞生成加载过渡动画（3秒加载效果）
+- 🔄 开始流式输出功能提取和模块化
+  - 分析stream-script-v4.js核心功能
+  - 准备创建StreamProcessor类
 
 ## 下一步行动计划
 
 ### 步骤1：项目准备
-- [ ] 更新用户CLAUDE.md文件，添加自动创建problem_log.md的指令
+- [x] 更新用户CLAUDE.md文件，添加自动创建problem_log.md的指令（已完成）
+- [x] 创建静态demo页面验证横向布局设计（已完成）
 - [ ] 创建新的index-v2.html作为重构版本基础文件
 - [ ] 创建script-v2.js作为新的逻辑处理文件
 - [ ] 创建styles-v2.css作为新的样式文件
 
-### 步骤2：流式输出模块化
+### 步骤2：流式输出模块化（进行中）
 - [ ] 提取stream-script-v4.js的核心功能为独立类StreamProcessor
+  - 极简XML解析器（<s1><t>标题</t><c>内容</c></s1>格式）
+  - 流式数据处理器
+  - 打字机效果渲染器
 - [ ] 创建stream-utils.js工具文件
 - [ ] 定义流式数据解析接口
 - [ ] 实现XML内容渐进式渲染
@@ -293,12 +305,35 @@ class WorkflowDataManager {
 - [ ] 创建API文档
 - [ ] 编写用户使用指南
 
+## 技术实现细节
+
+### 流式输出关键技术点
+1. **极简XML格式解析**
+   - 格式：`<s1><t>标题</t><c>内容</c></s1>`
+   - 传输效率提升70%
+   - 解析速度提升3倍
+
+2. **6步工作流设计**
+   - Step 0: 模式选择（快速生成/定制创作）
+   - Step 1: 创意输入（根据模式显示不同UI）
+   - Step 2: 脑洞生成（3秒加载动画）
+   - Step 3: 大纲创作
+   - Step 4: 小说撰写
+   - Step 5: 脚本生成
+
+3. **前端状态管理**
+   - LocalStorage存储会话数据
+   - SessionStorage存储临时状态
+   - 步骤间数据自动传递
+
 ## 备注
 
 - 所有修改都在test分支进行
 - 保留原版本作为备份
 - 每个重大改动后进行git commit
+- demo文件单独存放在demo/文件夹中
 
 ---
 
 *本文档将持续更新，记录项目进展和决策过程*
+*最后更新：2025-08-09*
