@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑功能测试</title>
+    <script src="https://cdn.tailwindcss.com/3.3.3"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <style>
+        .editable {
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        
+        .editable[contenteditable="true"] {
+            background: white;
+            outline: 2px solid #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .edit-controls {
+            display: none;
+            gap: 6px;
+            margin-left: 10px;
+        }
+        
+        .edit-controls.show {
+            display: inline-flex;
+        }
+        
+        .edit-controls button {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .save-btn {
+            background: #10b981;
+            color: white;
+        }
+        
+        .cancel-btn {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .edit-icon {
+            margin-left: 8px;
+            color: #3b82f6;
+            font-size: 14px;
+            cursor: pointer;
+            opacity: 0.6;
+        }
+        
+        .edit-icon:hover {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-2xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">编辑功能测试</h1>
+        
+        <div class="bg-white rounded-lg p-6 mb-4">
+            <h3 class="text-lg font-semibold mb-2">
+                <span class="editable" data-type="title">这是一个标题</span>
+                <i class="fas fa-edit edit-icon" onclick="startEdit(this)"></i>
+                <span class="edit-controls">
+                    <button class="save-btn" onclick="saveEdit(this)">保存</button>
+                    <button class="cancel-btn" onclick="cancelEdit(this)">取消</button>
+                </span>
+            </h3>
+            <p>
+                <span class="editable" data-type="content">这是一段内容文字</span>
+                <i class="fas fa-edit edit-icon" onclick="startEdit(this)"></i>
+                <span class="edit-controls">
+                    <button class="save-btn" onclick="saveEdit(this)">保存</button>
+                    <button class="cancel-btn" onclick="cancelEdit(this)">取消</button>
+                </span>
+            </p>
+        </div>
+        
+        <div id="log" class="bg-gray-800 text-green-400 p-4 rounded font-mono text-sm">
+            控制台日志：
+        </div>
+    </div>
+    
+    <script>
+        let editingElements = new Map();
+        
+        function log(msg) {
+            const logDiv = document.getElementById('log');
+            logDiv.innerHTML += '<br>' + new Date().toLocaleTimeString() + ' - ' + msg;
+        }
+        
+        function startEdit(icon) {
+            log('开始编辑');
+            const editable = icon.previousElementSibling;
+            const controls = icon.nextElementSibling;
+            
+            if (!editable || !editable.classList.contains('editable')) return;
+            
+            // 保存原始内容
+            editingElements.set(editable, editable.textContent);
+            
+            // 进入编辑模式
+            editable.contentEditable = true;
+            editable.focus();
+            
+            // 显示控制按钮
+            controls.classList.add('show');
+            icon.style.display = 'none';
+            
+            // 选中文本
+            const range = document.createRange();
+            const sel = window.getSelection();
+            range.selectNodeContents(editable);
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+        
+        function saveEdit(btn) {
+            log('保存编辑');
+            const controls = btn.parentElement;
+            const icon = controls.previousElementSibling;
+            const editable = icon.previousElementSibling;
+            
+            // 退出编辑模式
+            editable.contentEditable = false;
+            
+            // 隐藏控制按钮
+            controls.classList.remove('show');
+            icon.style.display = '';
+            
+            // 保存内容
+            const newContent = editable.textContent;
+            log('保存内容: ' + newContent);
+            
+            // 清理
+            editingElements.delete(editable);
+        }
+        
+        function cancelEdit(btn) {
+            log('取消编辑');
+            const controls = btn.parentElement;
+            const icon = controls.previousElementSibling;
+            const editable = icon.previousElementSibling;
+            
+            // 恢复原始内容
+            const originalContent = editingElements.get(editable);
+            if (originalContent !== undefined) {
+                editable.textContent = originalContent;
+            }
+            
+            // 退出编辑模式
+            editable.contentEditable = false;
+            
+            // 隐藏控制按钮
+            controls.classList.remove('show');
+            icon.style.display = '';
+            
+            // 清理
+            editingElements.delete(editable);
+        }
+    </script>
+</body>
+</html>
