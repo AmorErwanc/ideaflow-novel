@@ -466,8 +466,8 @@ function showOutlineLoading(isRegenerate = false) {
                     <div class="stream-dot"></div>
                     <div class="stream-dot"></div>
                 </div>
-                <p class="stream-loading-text">正在分析脑洞内容...</p>
-                <p class="text-sm text-gray-500 mt-2">AI正在理解故事核心，准备构建大纲</p>
+                <p class="stream-loading-text">正在连接AI服务...</p>
+                <p class="text-sm text-gray-500 mt-2">请稍候，生成大纲中</p>
                 <div class="loading-progress-bar">
                     <div class="loading-progress-fill"></div>
                 </div>
@@ -475,21 +475,17 @@ function showOutlineLoading(isRegenerate = false) {
         </div>
     `;
     
-    // 3秒后更新提示文字（和脑洞一样的时间间隔）
+    // 5秒后更新提示文字
     setTimeout(() => {
         const loadingText = container.querySelector('.stream-loading-text');
+        const subText = loadingText ? loadingText.nextElementSibling : null;
         if (loadingText) {
-            loadingText.textContent = 'AI正在深度创作，构思起承转合结构...';
+            loadingText.textContent = 'AI正在深度思考...';
         }
-    }, 3000);
-    
-    // 6秒后再次更新（大纲特有的第二阶段）
-    setTimeout(() => {
-        const loadingText = container.querySelector('.stream-loading-text');
-        if (loadingText) {
-            loadingText.textContent = '大纲框架已完成，准备流式展示...';
+        if (subText) {
+            subText.textContent = '生成起承转合中';
         }
-    }, 6000);
+    }, 5000);
 }
 
 // 隐藏大纲加载动画
