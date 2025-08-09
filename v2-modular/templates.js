@@ -238,6 +238,15 @@ function loadStepContent(step) {
                         document.getElementById('inputCharCount').textContent = this.value.length;
                     });
                 }
+            } else if (step === 3) {
+                // 大纲步骤：检查是否有缓存内容
+                const cachedOutline = localStorage.getItem('currentOutline');
+                if (cachedOutline) {
+                    // 如果有缓存，立即恢复
+                    setTimeout(() => {
+                        restoreCachedOutline();
+                    }, 100);
+                }
             }
         }
     }

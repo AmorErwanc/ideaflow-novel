@@ -166,11 +166,21 @@ function goToStep(step) {
     
     updateUI();
     
-    // 如果跳转到大纲步骤且还没有生成大纲，自动生成
-    if (step === 3 && !document.getElementById('chaptersContainer')?.children.length) {
-        setTimeout(() => {
-            generateOutline();
-        }, 500);
+    // 如果跳转到大纲步骤
+    if (step === 3) {
+        // 检查是否有缓存的大纲内容
+        const cachedOutline = localStorage.getItem('currentOutline');
+        const outlineContent = document.getElementById('outlineContent');
+        
+        if (cachedOutline && outlineContent && !outlineContent.children.length) {
+            // 如果有缓存且容器为空，恢复缓存内容
+            restoreCachedOutline();
+        } else if (!cachedOutline && !document.getElementById('outlineContent')?.children.length) {
+            // 如果没有缓存且没有内容，自动生成
+            setTimeout(() => {
+                generateOutline();
+            }, 500);
+        }
     }
     // 如果跳转到小说步骤且还没有生成小说，自动生成
     if (step === 4 && !document.getElementById('novelText')?.textContent) {

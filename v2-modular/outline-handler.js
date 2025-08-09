@@ -512,3 +512,58 @@ function hideOutlineLoading() {
         }, 300);
     }
 }
+
+// 恢复缓存的大纲内容
+function restoreCachedOutline() {
+    const cachedOutline = localStorage.getItem('currentOutline');
+    if (!cachedOutline) return;
+    
+    try {
+        const outline = JSON.parse(cachedOutline);
+        const container = document.getElementById('outlineContainer');
+        
+        if (container) {
+            // 先创建容器结构
+            container.innerHTML = `
+                <div id="outlineContent" class="space-y-4">
+                    <!-- 大纲内容将在这里动态生成 -->
+                </div>
+            `;
+            
+            // 创建大纲结构
+            createEmptyOutlineStructure();
+            
+            // 填充缓存的内容
+            const sections = ['open', 'build', 'turn', 'end'];
+            sections.forEach(section => {
+                if (outline[section]) {
+                    const contentElement = document.getElementById(`${section}Content`);
+                    if (contentElement) {
+                        const wrapper = contentElement.querySelector('.content-wrapper');
+                        if (wrapper) {
+                            wrapper.textContent = outline[section];
+                        }
+                        // 移除光标
+                        const cursor = contentElement.querySelector('.typewriter-cursor');
+                        if (cursor) {
+                            cursor.remove();
+                        }
+                    }
+                }
+            });
+            
+            // 添加编辑功能
+            finalizeOutline();
+            
+            // 显示控制区域
+            showOutlineControls();
+            
+            // 恢复解析状态
+            outlineParserState.outline = outline;
+            
+            console.log('✅ 大纲内容已从缓存恢复');
+        }
+    } catch (error) {
+        console.error('恢复大纲缓存失败:', error);
+    }
+}
