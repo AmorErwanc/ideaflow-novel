@@ -56,13 +56,13 @@ async function generateIdeasAPI(mode, prompt = null, count = 5) {
 }
 
 // 重新生成脑洞（流式）
-async function regenerateIdeasAPI(mode, prompt, optimization = null, selectedIdea = null, previousIdeas = []) {
+async function regenerateIdeasAPI(mode, prompt, optimization = null, selectedIdea = null, previousIdeas = [], count = 5) {
     const sessionId = getSessionId();
     const requestBody = {
         action: 'regenerate',
         mode: mode,
         prompt: prompt,
-        count: 5,
+        count: count,
         regenerate_context: {
             selected_idea: selectedIdea,
             optimization: optimization,

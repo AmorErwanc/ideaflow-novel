@@ -76,7 +76,7 @@ async function regenerateIdeas() {
         const story = parserState.stories.get(String(selectedIdea));
         if (story) {
             selectedIdeaData = {
-                number: selectedIdea,
+                number: parseInt(selectedIdea),  // 确保是数字类型
                 title: story.title,
                 content: story.content
             };
@@ -109,13 +109,19 @@ async function regenerateIdeas() {
         const originalPrompt = localStorage.getItem('userCreativeInput') || null;
         const mode = originalPrompt ? 'custom' : 'quick';
         
+        // 获取之前使用的数量
+        const previousCount = mode === 'custom' ? 
+            (window.customIdeaCount || parseInt(localStorage.getItem('userIdeaCount')) || 6) : 
+            10;
+        
         // 调用重新生成API
         const response = await regenerateIdeasAPI(
             mode,
             originalPrompt,
             userSuggestion || null,
             selectedIdeaData,
-            previousIdeas
+            previousIdeas,
+            previousCount
         );
         
         // 重置解析状态（加载动画将在检测到第一个<story>时隐藏）
