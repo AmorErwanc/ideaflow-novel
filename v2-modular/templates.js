@@ -21,6 +21,68 @@ const pageTemplates = {
                     placeholder="描述你想要的故事类型、主题、角色设定等...&#10;例如：一个关于时间旅行者的故事，主角每次回到过去都会失去一段记忆..."></textarea>
             </div>
             
+            <!-- 数量选择器 -->
+            <div class="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
+                <label class="block text-sm font-semibold text-gray-700 mb-3">
+                    <i class="fas fa-layer-group mr-1 text-purple-600"></i>生成脑洞数量
+                </label>
+                
+                <!-- 滑块和数字显示 -->
+                <div class="flex items-center gap-4 mb-3">
+                    <div class="flex-1 relative">
+                        <input 
+                            type="range" 
+                            id="ideaCountSlider" 
+                            min="1" 
+                            max="15" 
+                            value="6" 
+                            class="w-full h-2 bg-gradient-to-r from-blue-200 to-purple-200 rounded-lg appearance-none cursor-pointer slider-thumb"
+                            oninput="updateIdeaCount(this.value)">
+                        
+                        <!-- 刻度标记 -->
+                        <div class="flex justify-between mt-1 px-1">
+                            <span class="text-xs text-gray-500">1</span>
+                            <span class="text-xs text-gray-500">5</span>
+                            <span class="text-xs text-gray-500">10</span>
+                            <span class="text-xs text-gray-500">15</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 数字显示器 -->
+                    <div class="flex items-center">
+                        <div class="relative">
+                            <div class="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl shadow-lg">
+                                <span id="ideaCountDisplay" class="text-2xl font-bold text-white">6</span>
+                            </div>
+                            <div class="absolute -bottom-1 -right-1 bg-white rounded-full p-1 shadow-md">
+                                <i class="fas fa-lightbulb text-yellow-500 text-xs"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 快速选择按钮 -->
+                <div class="flex gap-2">
+                    <button onclick="setIdeaCount(6)" class="quick-select-btn px-3 py-1.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg text-sm font-medium transition-all">
+                        标准数量 (6)
+                    </button>
+                    <button onclick="setIdeaCount(9)" class="quick-select-btn px-3 py-1.5 bg-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 hover:text-white border border-gray-300 rounded-lg text-sm font-medium transition-all">
+                        丰富选择 (9)
+                    </button>
+                    <button onclick="setIdeaCount(12)" class="quick-select-btn px-3 py-1.5 bg-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 hover:text-white border border-gray-300 rounded-lg text-sm font-medium transition-all">
+                        更多选择 (12)
+                    </button>
+                    <button onclick="setIdeaCount(15)" class="quick-select-btn px-3 py-1.5 bg-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 hover:text-white border border-gray-300 rounded-lg text-sm font-medium transition-all">
+                        最大数量 (15)
+                    </button>
+                </div>
+                
+                <div class="mt-2 text-xs text-gray-600 flex items-center">
+                    <i class="fas fa-info-circle mr-1 text-blue-500"></i>
+                    <span>数量越多，生成时间越长，但选择更丰富</span>
+                </div>
+            </div>
+            
             <div class="flex items-center justify-between">
                 <div class="text-sm text-gray-500">
                     <i class="fas fa-keyboard mr-1"></i>已输入 <span id="inputCharCount">0</span> 字

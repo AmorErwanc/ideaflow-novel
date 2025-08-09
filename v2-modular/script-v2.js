@@ -74,6 +74,50 @@ function goBackToModeSelection() {
     updateUI();
 }
 
+// 更新脑洞数量显示
+function updateIdeaCount(value) {
+    const display = document.getElementById('ideaCountDisplay');
+    if (display) {
+        display.textContent = value;
+        // 添加弹性动画
+        display.parentElement.style.transform = 'scale(1.1)';
+        setTimeout(() => {
+            display.parentElement.style.transform = 'scale(1)';
+        }, 200);
+    }
+    
+    // 更新快速选择按钮的样式
+    document.querySelectorAll('.quick-select-btn').forEach(btn => {
+        btn.classList.remove('bg-gradient-to-r', 'from-blue-500', 'to-purple-500', 'text-white');
+        btn.classList.add('bg-white', 'border', 'border-gray-300');
+    });
+    
+    // 高亮对应的快速选择按钮
+    const quickBtns = {
+        '6': 0,
+        '9': 1,
+        '12': 2,
+        '15': 3
+    };
+    
+    if (quickBtns[value] !== undefined) {
+        const btns = document.querySelectorAll('.quick-select-btn');
+        if (btns[quickBtns[value]]) {
+            btns[quickBtns[value]].classList.remove('bg-white', 'border', 'border-gray-300');
+            btns[quickBtns[value]].classList.add('bg-gradient-to-r', 'from-blue-500', 'to-purple-500', 'text-white');
+        }
+    }
+}
+
+// 设置脑洞数量（快速选择）
+function setIdeaCount(count) {
+    const slider = document.getElementById('ideaCountSlider');
+    if (slider) {
+        slider.value = count;
+        updateIdeaCount(count);
+    }
+}
+
 // 处理定制输入
 function processCustomInput() {
     const input = document.getElementById('userCreativeInput').value.trim();
@@ -82,8 +126,16 @@ function processCustomInput() {
         return;
     }
     
-    // 保存用户输入到localStorage
+    // 获取选择的数量
+    const countSlider = document.getElementById('ideaCountSlider');
+    const ideaCount = countSlider ? parseInt(countSlider.value) : 5;
+    
+    // 保存用户输入和数量到localStorage
     localStorage.setItem('userCreativeInput', input);
+    localStorage.setItem('userIdeaCount', ideaCount);
+    
+    // 保存到全局变量供API使用
+    window.customIdeaCount = ideaCount;
     
     // 跳到脑洞生成步骤
     currentStep = 2;
@@ -267,13 +319,35 @@ function updateUI() {
         }
     });
     
-    // 更新连接线状态
+    // 更新连接线状态（添加动画效果）
     document.querySelectorAll('.progress-line').forEach((line, index) => {
-        line.classList.remove('active', 'completed');
+        const wasActive = line.classList.contains('active');
+        const wasCompleted = line.classList.contains('completed');
+        
+        line.classList.remove('active', 'completed', 'animating');
+        
         if (index < progressIndex) {
-            line.classList.add('completed');
+            // 如果这条线刚从active变为completed，添加动画
+            if (wasActive && !wasCompleted) {
+                line.classList.add('animating');
+                setTimeout(() => {
+                    line.classList.remove('animating');
+                    line.classList.add('completed');
+                }, 50);
+            } else {
+                line.classList.add('completed');
+            }
         } else if (index === progressIndex) {
-            line.classList.add('active');
+            // 如果这条线刚变为active，添加动画
+            if (!wasActive) {
+                line.classList.add('animating');
+                setTimeout(() => {
+                    line.classList.remove('animating');
+                    line.classList.add('active');
+                }, 50);
+            } else {
+                line.classList.add('active');
+            }
         }
     });
     

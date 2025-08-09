@@ -19,7 +19,10 @@ async function startStreamingIdeas(userInput = null) {
     try {
         // 确定生成模式
         const mode = userInput ? 'custom' : 'quick';
-        const count = selectedMode === 'quick' ? 10 : 5;
+        // 使用用户选择的数量，如果是自定义模式使用用户选择的值，快速模式默认10个
+        const count = mode === 'custom' ? 
+            (window.customIdeaCount || parseInt(localStorage.getItem('userIdeaCount')) || 6) : 
+            10;
         
         // 调用API
         const response = await generateIdeasAPI(mode, userInput, count);

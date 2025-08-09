@@ -1,4 +1,4 @@
-/* 进度条样式 - 优化动画 */
+/* 进度条样式 - 视频播放器风格动画 */
 .progress-line {
     height: 4px;
     background: #e5e7eb;
@@ -7,9 +7,34 @@
     overflow: hidden;
 }
 
-.progress-line.active {
+.progress-line::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 0%;
     background: linear-gradient(90deg, #10b981 0%, #059669 100%);
-    position: relative;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 2px;
+}
+
+.progress-line.animating::before {
+    animation: progress-fill 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes progress-fill {
+    from {
+        width: 0%;
+    }
+    to {
+        width: 100%;
+    }
+}
+
+.progress-line.active::before {
+    width: 100%;
+    background: linear-gradient(90deg, #10b981 0%, #059669 100%);
 }
 
 .progress-line.active::after {
@@ -28,8 +53,13 @@
     100% { transform: translateX(100%); }
 }
 
-.progress-line.completed {
+.progress-line.completed::before {
+    width: 100%;
     background: #10b981;
+}
+
+.progress-line.completed {
+    background: transparent;
 }
 
 /* 步骤节点样式 - 增强交互 */
@@ -648,6 +678,68 @@ p:hover .edit-icon:not(.editing) {
 .save-hint.show {
     opacity: 1;
     transform: translateY(0);
+}
+
+/* 滑块样式 */
+.slider-thumb {
+    -webkit-appearance: none;
+}
+
+.slider-thumb::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+    transition: all 0.2s ease;
+}
+
+.slider-thumb::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 3px 12px rgba(139, 92, 246, 0.6);
+}
+
+.slider-thumb::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #8b5cf6 0%, #3b82f6 100%);
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.4);
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.slider-thumb::-moz-range-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 3px 12px rgba(139, 92, 246, 0.6);
+}
+
+/* 快速选择按钮动画 */
+.quick-select-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.quick-select-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transform: translate(-50%, -50%);
+    transition: width 0.4s, height 0.4s;
+}
+
+.quick-select-btn:active::before {
+    width: 200px;
+    height: 200px;
 }
 
 /* 页面入场动画 */
