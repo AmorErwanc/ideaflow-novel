@@ -17,69 +17,73 @@ const pageTemplates = {
                 <textarea 
                     id="userCreativeInput"
                     class="w-full p-4 rounded-lg border-2 border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all resize-none" 
-                    rows="4" 
+                    rows="6" 
                     placeholder="描述你想要的故事类型、主题、角色设定等...&#10;例如：一个关于时间旅行者的故事，主角每次回到过去都会失去一段记忆..."></textarea>
             </div>
             
-            <!-- 数量选择器 -->
-            <div class="mb-6 p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
-                <label class="block text-sm font-semibold text-gray-700 mb-3">
-                    <i class="fas fa-layer-group mr-1 text-purple-600"></i>生成脑洞数量
-                </label>
-                
-                <!-- 滑块和数字显示 -->
-                <div class="flex items-center gap-4 mb-3">
-                    <div class="flex-1 relative">
-                        <input 
-                            type="range" 
-                            id="ideaCountSlider" 
-                            min="1" 
-                            max="15" 
-                            value="6" 
-                            class="w-full h-2 bg-gradient-to-r from-blue-200 to-purple-200 rounded-lg appearance-none cursor-pointer slider-thumb"
-                            oninput="updateIdeaCount(this.value)">
+            <!-- 数量选择器 (精简版) -->
+            <div class="mb-4 p-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg">
+                <div class="flex items-center justify-between gap-3">
+                    <!-- 左侧标签和滑块 -->
+                    <div class="flex-1">
+                        <label class="block text-xs font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-layer-group mr-1 text-purple-600 text-xs"></i>生成数量
+                        </label>
                         
-                        <!-- 刻度标记 -->
-                        <div class="flex justify-between mt-1 px-1">
-                            <span class="text-xs text-gray-500">1</span>
-                            <span class="text-xs text-gray-500">5</span>
-                            <span class="text-xs text-gray-500">10</span>
-                            <span class="text-xs text-gray-500">15</span>
+                        <!-- 滑块 -->
+                        <div class="relative">
+                            <input 
+                                type="range" 
+                                id="ideaCountSlider" 
+                                min="1" 
+                                max="15" 
+                                value="6" 
+                                class="w-full h-1.5 bg-gradient-to-r from-blue-200 to-purple-200 rounded-lg appearance-none cursor-pointer slider-thumb-small"
+                                oninput="updateIdeaCount(this.value)">
+                            
+                            <!-- 刻度标记 -->
+                            <div class="flex justify-between mt-0.5 px-0.5">
+                                <span class="text-xs text-gray-400">1</span>
+                                <span class="text-xs text-gray-400">5</span>
+                                <span class="text-xs text-gray-400">10</span>
+                                <span class="text-xs text-gray-400">15</span>
+                            </div>
                         </div>
                     </div>
                     
-                    <!-- 数字显示器 -->
-                    <div class="flex items-center">
+                    <!-- 右侧数字显示和快速选择 -->
+                    <div class="flex items-center gap-2">
+                        <!-- 数字显示器 (缩小版) -->
                         <div class="relative">
-                            <div class="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-500 to-blue-500 rounded-xl shadow-lg">
-                                <span id="ideaCountDisplay" class="text-2xl font-bold text-white">6</span>
+                            <div class="flex items-center justify-center w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg shadow">
+                                <span id="ideaCountDisplay" class="text-lg font-bold text-white">6</span>
                             </div>
-                            <div class="absolute -bottom-1 -right-1 bg-white rounded-full p-1 shadow-md">
-                                <i class="fas fa-lightbulb text-yellow-500 text-xs"></i>
+                            <div class="absolute -bottom-0.5 -right-0.5 bg-white rounded-full p-0.5 shadow-sm">
+                                <i class="fas fa-lightbulb text-yellow-500" style="font-size: 8px;"></i>
                             </div>
+                        </div>
+                        
+                        <!-- 快速选择按钮 (紧凑版) -->
+                        <div class="flex gap-1">
+                            <button onclick="setIdeaCount(6)" class="quick-select-btn px-2 py-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded text-xs font-medium transition-all">
+                                6
+                            </button>
+                            <button onclick="setIdeaCount(9)" class="quick-select-btn px-2 py-1 bg-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 hover:text-white border border-gray-300 rounded text-xs font-medium transition-all">
+                                9
+                            </button>
+                            <button onclick="setIdeaCount(12)" class="quick-select-btn px-2 py-1 bg-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 hover:text-white border border-gray-300 rounded text-xs font-medium transition-all">
+                                12
+                            </button>
+                            <button onclick="setIdeaCount(15)" class="quick-select-btn px-2 py-1 bg-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 hover:text-white border border-gray-300 rounded text-xs font-medium transition-all">
+                                15
+                            </button>
                         </div>
                     </div>
                 </div>
                 
-                <!-- 快速选择按钮 -->
-                <div class="flex gap-2">
-                    <button onclick="setIdeaCount(6)" class="quick-select-btn px-3 py-1.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg text-sm font-medium transition-all">
-                        标准数量 (6)
-                    </button>
-                    <button onclick="setIdeaCount(9)" class="quick-select-btn px-3 py-1.5 bg-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 hover:text-white border border-gray-300 rounded-lg text-sm font-medium transition-all">
-                        丰富选择 (9)
-                    </button>
-                    <button onclick="setIdeaCount(12)" class="quick-select-btn px-3 py-1.5 bg-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 hover:text-white border border-gray-300 rounded-lg text-sm font-medium transition-all">
-                        更多选择 (12)
-                    </button>
-                    <button onclick="setIdeaCount(15)" class="quick-select-btn px-3 py-1.5 bg-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 hover:text-white border border-gray-300 rounded-lg text-sm font-medium transition-all">
-                        最大数量 (15)
-                    </button>
-                </div>
-                
-                <div class="mt-2 text-xs text-gray-600 flex items-center">
-                    <i class="fas fa-info-circle mr-1 text-blue-500"></i>
-                    <span>数量越多，生成时间越长，但选择更丰富</span>
+                <div class="mt-1.5 text-xs text-gray-500 flex items-center">
+                    <i class="fas fa-info-circle mr-1 text-blue-400" style="font-size: 10px;"></i>
+                    <span style="font-size: 11px;">数量越多，生成时间越长</span>
                 </div>
             </div>
             
