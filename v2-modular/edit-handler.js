@@ -5,6 +5,7 @@ let editingElements = new Map(); // 存储正在编辑的元素和原始内容
 function initEditableContent() {
     // 只为尚未绑定事件的编辑图标添加点击事件
     const editIcons = document.querySelectorAll('.edit-icon:not([data-initialized])');
+    console.log('🔧 初始化编辑功能，找到图标数量:', editIcons.length);
     editIcons.forEach(icon => {
         icon.addEventListener('click', handleEditIconClick);
         icon.setAttribute('data-initialized', 'true');
@@ -225,3 +226,4 @@ function showSaveHint() {
 // 将函数暴露到全局作用域，以便HTML中的onclick可以调用
 window.saveEditBtn = saveEditBtn;
 window.cancelEditBtn = cancelEditBtn;
+window.initEditableContent = initEditableContent;
