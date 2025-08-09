@@ -188,7 +188,12 @@ async function generateNovelAPI(outline) {
     const sessionId = getSessionId();
     const requestBody = {
         action: 'generate',
-        outline: outline,
+        outline: {
+            opening: outline.open,
+            development: outline.build,
+            climax: outline.turn,
+            conclusion: outline.end
+        },
         session_id: sessionId
     };
 
