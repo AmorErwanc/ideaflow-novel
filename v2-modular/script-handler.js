@@ -236,9 +236,11 @@ function detectAndProcessScriptXML() {
         console.log('📝 检测到content标签开始');
         scriptParserState.contentStarted = true;
         // 只移除标签本身，保留标签后的内容
-        const contentTagIndex = scriptParserState.buffer.indexOf('<content>');
+        const tagString = '<content>';
+        const contentTagIndex = scriptParserState.buffer.lastIndexOf(tagString);
         if (contentTagIndex !== -1) {
-            scriptParserState.buffer = scriptParserState.buffer.substring(contentTagIndex + 9); // 跳过'<content>'
+            // 从标签结束位置开始截取，保留标签后的所有内容
+            scriptParserState.buffer = scriptParserState.buffer.substring(contentTagIndex + tagString.length);
         } else {
             // 如果找不到完整标签（可能被分片），清空buffer
             scriptParserState.buffer = '';

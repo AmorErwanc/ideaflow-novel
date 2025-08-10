@@ -256,9 +256,11 @@ function detectAndProcessNovelXML() {
         console.log('📝 检测到text标签开始');
         novelParserState.textStarted = true;
         // 只移除标签本身，保留标签后的内容
-        const textTagIndex = novelParserState.buffer.indexOf('<text>');
+        const tagString = '<text>';
+        const textTagIndex = novelParserState.buffer.lastIndexOf(tagString);
         if (textTagIndex !== -1) {
-            novelParserState.buffer = novelParserState.buffer.substring(textTagIndex + 6); // 跳过'<text>'
+            // 从标签结束位置开始截取，保留标签后的所有内容
+            novelParserState.buffer = novelParserState.buffer.substring(textTagIndex + tagString.length);
         } else {
             // 如果找不到完整标签（可能被分片），清空buffer
             novelParserState.buffer = '';

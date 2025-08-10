@@ -311,9 +311,11 @@ function detectAndProcessOutlineXML() {
             console.log(`📝 ${sectionTitles[section]}开始`);
             outlineParserState.currentTag = section;
             // 只移除标签本身，保留标签后的内容
-            const tagIndex = outlineParserState.buffer.indexOf(`<${section}>`);
+            const tagString = `<${section}>`;
+            const tagIndex = outlineParserState.buffer.lastIndexOf(tagString);
             if (tagIndex !== -1) {
-                outlineParserState.buffer = outlineParserState.buffer.substring(tagIndex + section.length + 2); // 跳过'<section>'
+                // 从标签结束位置开始截取，保留标签后的所有内容
+                outlineParserState.buffer = outlineParserState.buffer.substring(tagIndex + tagString.length);
             } else {
                 // 如果找不到完整标签（可能被分片），清空buffer
                 outlineParserState.buffer = '';
