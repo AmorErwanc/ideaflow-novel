@@ -532,6 +532,11 @@ function showOutlineControls() {
     // 检查是否已存在控制区域
     if (document.getElementById('outlineControls')) return;
     
+    // 先给容器添加最大高度和滚动
+    container.style.maxHeight = '600px';
+    container.style.overflowY = 'auto';
+    container.classList.add('relative');
+    
     const controlsDiv = document.createElement('div');
     controlsDiv.id = 'outlineControls';
     controlsDiv.className = 'mt-6';
@@ -547,15 +552,26 @@ function showOutlineControls() {
                         placeholder="输入优化建议，比如：需要更多情感冲突...">
                     <i class="fas fa-comment-dots text-gray-400 absolute left-3 top-3.5"></i>
                 </div>
-                <button 
-                    onclick="regenerateOutline()" 
-                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-6 rounded-lg font-medium transition-colors flex items-center">
-                    <i class="fas fa-sync-alt mr-2"></i>重新生成
-                </button>
+                <div class="flex gap-2">
+                    <button 
+                        onclick="downloadOutline()" 
+                        class="bg-blue-500 hover:bg-blue-600 text-white py-3 px-6 rounded-lg font-medium transition-colors flex items-center">
+                        <i class="fas fa-download mr-2"></i>下载
+                    </button>
+                    <button 
+                        onclick="regenerateOutline()" 
+                        class="bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-6 rounded-lg font-medium transition-colors flex items-center">
+                        <i class="fas fa-sync-alt mr-2"></i>重新生成
+                    </button>
+                </div>
             </div>
         </div>
     `;
-    container.appendChild(controlsDiv);
+    
+    // 插入到容器的父元素中，在容器后面
+    if (container.parentNode) {
+        container.parentNode.insertBefore(controlsDiv, container.nextSibling);
+    }
 }
 
 // 启用大纲编辑模式（仅内容编辑）

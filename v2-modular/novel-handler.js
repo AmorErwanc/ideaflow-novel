@@ -413,6 +413,11 @@ function showNovelControls() {
     // 检查是否已存在控制区域
     if (document.getElementById('novelControls')) return;
     
+    // 先给容器添加最大高度和滚动
+    container.style.maxHeight = '600px';
+    container.style.overflowY = 'auto';
+    container.classList.add('relative');
+    
     const controlsDiv = document.createElement('div');
     controlsDiv.id = 'novelControls';
     controlsDiv.className = 'mt-6';
@@ -444,10 +449,9 @@ function showNovelControls() {
         </div>
     `;
     
-    // 插入到内容之后
-    const novelContent = document.getElementById('novelContent');
-    if (novelContent && novelContent.parentNode) {
-        novelContent.parentNode.insertBefore(controlsDiv, novelContent.nextSibling);
+    // 插入到容器的父元素中，在容器后面
+    if (container.parentNode) {
+        container.parentNode.insertBefore(controlsDiv, container.nextSibling);
     }
 }
 
