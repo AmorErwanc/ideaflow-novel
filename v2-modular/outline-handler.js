@@ -444,15 +444,35 @@ function enableOutlineEdit(sectionId, type) {
 
         // 获取整个section容器
         const sectionContainer = element.closest('.outline-section');
+        
+        // 先获取原始容器的实际高度和位置
+        const originalHeight = sectionContainer.offsetHeight;
+        const originalRect = sectionContainer.getBoundingClientRect();
 
-        // 创建一个编辑容器，覆盖在原内容上
+        // 创建背景遮罩层，确保完全覆盖原内容
+        const maskLayer = document.createElement('div');
+        maskLayer.className = 'absolute inset-0 bg-white z-10';
+        maskLayer.style.position = 'absolute';
+        maskLayer.style.top = '-1px';  // 稍微扩展以防止边缘透出
+        maskLayer.style.left = '-1px';
+        maskLayer.style.right = '-1px';
+        maskLayer.style.bottom = '-1px';
+        maskLayer.style.backgroundColor = '#ffffff';  // 纯白色背景
+        maskLayer.style.borderRadius = '12px';  // 匹配圆角
+        maskLayer.style.minHeight = (originalHeight + 2) + 'px';  // 高度+2px确保覆盖
+
+        // 创建编辑容器，放在遮罩层上方
         const editContainer = document.createElement('div');
-        editContainer.className = 'absolute inset-0 bg-white rounded-xl p-4 z-10 shadow-xl outline-edit-container overflow-hidden';
+        editContainer.className = 'absolute inset-0 bg-white rounded-xl p-4 z-20 shadow-xl outline-edit-container';
+        editContainer.style.position = 'absolute';
+        editContainer.style.top = '0';
+        editContainer.style.left = '0';
+        editContainer.style.right = '0';
+        editContainer.style.bottom = '0';
         editContainer.style.border = '1px solid #e5e7eb';
-        editContainer.style.backgroundColor = '#ffffff';  // 使用纯白色背景，确保不透明
-        editContainer.style.minHeight = '100%';
-        editContainer.style.height = '100%';  // 强制100%高度
-        editContainer.style.boxSizing = 'border-box';  // 确保padding包含在高度内
+        editContainer.style.backgroundColor = '#ffffff';
+        editContainer.style.minHeight = originalHeight + 'px';
+        editContainer.style.boxSizing = 'border-box';
 
         // 创建标题显示（保持一致性）
         const sectionInfo = {
@@ -511,7 +531,8 @@ function enableOutlineEdit(sectionId, type) {
 
         // 设置相对定位以容纳绝对定位的编辑容器
         sectionContainer.style.position = 'relative';
-        sectionContainer.appendChild(editContainer);
+        sectionContainer.appendChild(maskLayer);  // 先添加遮罩层
+        sectionContainer.appendChild(editContainer);  // 再添加编辑容器
 
         // 设置textarea内容
         const textarea = editContainer.querySelector('textarea');
@@ -548,12 +569,14 @@ function enableOutlineEdit(sectionId, type) {
                     showSaveHint();
                 }
             }
+            maskLayer.remove();  // 移除遮罩层
             editContainer.remove();
             sectionContainer.style.position = '';
         };
 
         // 取消功能
         editContainer.querySelector('.cancel-btn').onclick = () => {
+            maskLayer.remove();  // 移除遮罩层
             editContainer.remove();
             sectionContainer.style.position = '';
         };
