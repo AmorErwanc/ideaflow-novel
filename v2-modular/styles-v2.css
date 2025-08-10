@@ -920,39 +920,42 @@ nav {
 
 /* 智能滚动提示样式 */
 .scroll-hint {
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
+    position: fixed;
+    bottom: 100px;  /* 调高位置，避免遮挡控制按钮 */
+    right: 30px;
     background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
     color: white;
-    padding: 12px 16px;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    padding: 10px 14px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
     z-index: 100;
     animation: fadeInUp 0.3s ease-out;
+    max-width: 200px;  /* 限制最大宽度 */
 }
 
 .scroll-hint-content {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 14px;
+    gap: 8px;
+    font-size: 13px;
 }
 
 .scroll-hint-content i {
-    font-size: 16px;
+    font-size: 14px;
 }
 
 .scroll-hint-btn {
-    margin-left: 8px;
-    padding: 4px 10px;
+    margin-left: 6px;
+    padding: 3px 8px;
     background: rgba(255, 255, 255, 0.2);
     border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 6px;
+    border-radius: 5px;
     color: white;
     font-size: 12px;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
+    white-space: nowrap;
 }
 
 .scroll-hint-btn:hover {

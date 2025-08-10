@@ -36,10 +36,10 @@ async function generateScript() {
     // 显示加载动画
     if (container) {
         showScriptLoading();
-        // 重置滚动管理器
-        const scrollManager = getScrollManager('scriptContainer');
-        if (scrollManager) {
-            scrollManager.reset();
+        // 销毁旧的滚动管理器（如果存在）
+        if (window.scrollManagers && window.scrollManagers['scriptContainer']) {
+            window.scrollManagers['scriptContainer'].destroy();
+            delete window.scrollManagers['scriptContainer'];
         }
     }
     
@@ -127,6 +127,11 @@ async function regenerateScript() {
     // 显示加载动画
     if (container) {
         showScriptLoading(true); // true表示重新生成
+        // 销毁旧的滚动管理器（如果存在）
+        if (window.scrollManagers && window.scrollManagers['scriptContainer']) {
+            window.scrollManagers['scriptContainer'].destroy();
+            delete window.scrollManagers['scriptContainer'];
+        }
     }
     
     try {
@@ -255,12 +260,14 @@ function detectAndProcessScriptXML() {
                 </div>
             `;
             
-            // 使用getScrollManager获取或创建
-            const scrollManager = getScrollManager('scriptContainer');
-            if (scrollManager) {
-                scrollManager.reset();
-                scrollManager.init(); // 重新初始化以绑定新容器
-            }
+            // 重要：延迟初始化滚动管理器，确保DOM完全就绪
+            setTimeout(() => {
+                const scrollManager = getScrollManager('scriptContainer');
+                if (scrollManager) {
+                    scrollManager.reset();
+                    scrollManager.init(); // 重新初始化以绑定新容器
+                }
+            }, 100);
         }
         
         // 获取标签后的内容
