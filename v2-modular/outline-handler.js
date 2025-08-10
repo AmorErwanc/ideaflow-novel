@@ -340,7 +340,7 @@ function createEmptyOutlineStructure() {
                 <i class="fas fa-${section.icon} text-${section.color}-500 mr-2"></i>
                 <span class="title-text">${section.title}</span>
             </h4>
-            <div id="${section.id}Content" class="text-gray-600 leading-relaxed relative editable bg-white p-2 rounded" data-section="${section.id}-content">
+            <div id="${section.id}Content" class="text-gray-600 leading-relaxed relative editable" data-section="${section.id}-content">
                 <span class="content-wrapper"></span>
                 <span class="typewriter-cursor">|</span>
                 <i class="fas fa-edit edit-icon text-blue-500 opacity-0 hover:opacity-100 transition-opacity cursor-pointer absolute top-0 right-0" onclick="enableOutlineEdit('${section.id}', 'content')"></i>
@@ -446,21 +446,18 @@ function enableOutlineEdit(sectionId, type) {
         // 获取父容器以保持样式一致
         const parentSection = element.closest('.outline-section');
         
-        // 创建文本域 - 使用透明背景让它继承父容器的白色背景
+        // 创建文本域 - 使用完整的样式确保一致性
         const textarea = document.createElement('textarea');
         textarea.value = originalContent;
-        textarea.className = 'w-full p-2 bg-transparent border-0 focus:outline-none resize-none text-gray-600 leading-relaxed';
+        textarea.className = 'w-full p-3 bg-white border-2 border-blue-400 rounded-lg focus:border-blue-500 focus:outline-none resize-none text-gray-600 leading-relaxed shadow-sm';
         
         // 动态计算行数以适应内容
         const lineCount = originalContent.split('\n').length;
         textarea.rows = Math.max(4, Math.min(lineCount + 2, 12));
         
-        // 给父容器添加编辑状态的视觉反馈
-        if (parentSection) {
-            parentSection.classList.add('editing-mode');
-            // 确保内容区域背景为白色
-            element.style.backgroundColor = 'white';
-        }
+        // 不需要给父容器添加editing-mode类，直接给编辑区域添加样式
+        element.classList.add('editing-mode');
+        element.style.padding = '0'; // 移除原有padding避免重复
         
         wrapper.style.display = 'none';
         element.insertBefore(textarea, wrapper);
@@ -486,9 +483,8 @@ function enableOutlineEdit(sectionId, type) {
                 showSaveHint();
             }
             // 移除编辑状态
-            if (parentSection) {
-                parentSection.classList.remove('editing-mode');
-            }
+            element.classList.remove('editing-mode');
+            element.style.padding = ''; // 恢复原有padding
             wrapper.style.display = '';
             textarea.remove();
             editIcon.style.display = '';
@@ -499,9 +495,8 @@ function enableOutlineEdit(sectionId, type) {
         controls.querySelector('.cancel-btn').onclick = () => {
             wrapper.textContent = originalContent;
             // 移除编辑状态
-            if (parentSection) {
-                parentSection.classList.remove('editing-mode');
-            }
+            element.classList.remove('editing-mode');
+            element.style.padding = ''; // 恢复原有padding
             wrapper.style.display = '';
             textarea.remove();
             editIcon.style.display = '';
