@@ -699,18 +699,54 @@ p:hover .edit-icon:not(.editing) {
     line-height: 1.6;
 }
 
-/* 编辑模式样式 - 直接应用到编辑区域 */
-.editable.editing-mode {
-    /* 编辑状态时的样式已在JS中通过textarea类名设置 */
-    /* 这里可以添加其他需要的补充样式 */
+/* 编辑容器动画效果 */
+.outline-edit-container {
+    animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* 编辑时的textarea增强 */
+.outline-edit-container textarea {
+    font-size: 15px;
+    line-height: 1.7;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.outline-edit-container textarea::-webkit-scrollbar {
+    width: 6px;
+}
+
+.outline-edit-container textarea::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+.outline-edit-container textarea::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.outline-edit-container textarea::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }
 
 /* textarea的hover和focus状态增强 */
-.editable textarea:hover {
+.outline-edit-container textarea:hover {
     border-color: #60a5fa;
 }
 
-.editable textarea:focus {
+.outline-edit-container textarea:focus {
     border-color: #3b82f6;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
