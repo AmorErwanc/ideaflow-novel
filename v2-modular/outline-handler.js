@@ -306,8 +306,8 @@ function detectAndProcessOutlineXML() {
     };
     
     for (const section of sections) {
-        // 检测标签开始
-        if (outlineParserState.plotStarted && tagBuffer.endsWith(`<${section}>`)) {
+        // 检测标签开始（只在当前没有处理任何标签时才检测）
+        if (!outlineParserState.currentTag && outlineParserState.plotStarted && tagBuffer.endsWith(`<${section}>`)) {
             console.log(`📝 ${sectionTitles[section]}开始`);
             outlineParserState.currentTag = section;
             // 只移除标签本身，保留标签后的内容
