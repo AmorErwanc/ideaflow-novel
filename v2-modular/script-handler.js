@@ -231,9 +231,11 @@ function detectAndProcessScriptXML() {
                     </div>
                 `;
                 
-                // 初始化或重新初始化滚动管理器
-                const scrollManager = new ScrollManager('scriptContainer');
-                scrollManagers['scriptContainer'] = scrollManager;
+                // 使用getScrollManager获取或创建，避免重复
+                const scrollManager = getScrollManager('scriptContainer');
+                if (scrollManager) {
+                    scrollManager.reset();  // 只重置状态，不重新创建
+                }
             }
         }, 300);
         return;
@@ -287,10 +289,14 @@ function appendToScriptContent(newChars) {
         // 直接追加文本
         wrapper.textContent += newChars;
         
-        // 使用智能滚动管理器
-        const scrollManager = getScrollManager('scriptContainer');
-        if (scrollManager) {
-            scrollManager.scrollToBottom();
+        // 使用节流，每100ms最多触发一次滚动
+        const now = Date.now();
+        if (!window.lastScriptScrollTime || now - window.lastScriptScrollTime > 100) {
+            const scrollManager = getScrollManager('scriptContainer');
+            if (scrollManager) {
+                scrollManager.scrollToBottom();
+            }
+            window.lastScriptScrollTime = now;
         }
     }
 }

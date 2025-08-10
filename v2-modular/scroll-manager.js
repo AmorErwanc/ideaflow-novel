@@ -7,9 +7,10 @@ class ScrollManager {
         this.container = null;
         this.isUserScrolling = false;
         this.lastScrollTop = 0;
+        this.lastUserScrollTime = 0;  // 记录最后一次用户滚动时间
         this.scrollCheckTimer = null;
         this.autoScrollEnabled = true;
-        this.scrollThreshold = 100; // 距离底部100px内认为是在底部
+        this.scrollThreshold = 300; // 增加到300px，给用户更多查看空间
         
         this.init();
     }
@@ -39,23 +40,33 @@ class ScrollManager {
         const scrollHeight = container.scrollHeight;
         const clientHeight = container.clientHeight;
         
+        // 记录用户滚动时间
+        this.lastUserScrollTime = Date.now();
+        
         // 计算是否在底部附近
         const isNearBottom = (scrollHeight - scrollTop - clientHeight) < this.scrollThreshold;
         
-        // 如果用户向上滚动了，标记为用户正在滚动
-        if (scrollTop < this.lastScrollTop && !isNearBottom) {
-            this.isUserScrolling = true;
-            console.log('👤 用户正在查看上方内容，暂停自动滚动');
+        // 改进的用户滚动检测逻辑
+        // 检测用户是否主动离开底部区域（不管向上还是停留在中间）
+        if (!isNearBottom) {
+            // 如果用户不在底部附近，且有明显的滚动动作
+            const scrollDiff = Math.abs(scrollTop - this.lastScrollTop);
             
-            // 显示提示（可选）
-            this.showScrollHint();
-        }
-        
-        // 如果用户滚动到底部附近，恢复自动滚动
-        if (isNearBottom) {
-            this.isUserScrolling = false;
-            console.log('✅ 用户返回底部，恢复自动滚动');
-            this.hideScrollHint();
+            // 用户主动滚动离开底部（向上滚动或停留在非底部位置）
+            if (scrollDiff > 10 || (this.lastScrollTop > 0 && !this.isUserScrolling)) {
+                this.isUserScrolling = true;
+                console.log('👤 用户正在查看内容，暂停自动滚动');
+                
+                // 显示提示
+                this.showScrollHint();
+            }
+        } else {
+            // 用户滚动到底部附近，恢复自动滚动
+            if (this.isUserScrolling) {
+                this.isUserScrolling = false;
+                console.log('✅ 用户返回底部，恢复自动滚动');
+                this.hideScrollHint();
+            }
         }
         
         this.lastScrollTop = scrollTop;
@@ -89,8 +100,30 @@ class ScrollManager {
     
     // 自动滚动到底部（只在允许时执行）
     scrollToBottom() {
+        // 多重检查确保不干扰用户阅读
+        const now = Date.now();
+        
+        // 1. 基础检查
         if (!this.container || this.isUserScrolling) {
-            return; // 用户正在滚动，不执行自动滚动
+            return;
+        }
+        
+        // 2. 时间检查：用户最近3秒内有滚动操作则不自动滚动
+        if (this.lastUserScrollTime && now - this.lastUserScrollTime < 3000) {
+            return;
+        }
+        
+        // 3. 位置检查：只有当用户在底部附近时才继续自动滚动
+        const scrollTop = this.container.scrollTop;
+        const scrollHeight = this.container.scrollHeight;
+        const clientHeight = this.container.clientHeight;
+        const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+        
+        // 如果用户已经远离底部，不再强制滚动
+        if (distanceFromBottom > this.scrollThreshold * 2) {
+            this.isUserScrolling = true; // 标记为用户正在查看
+            this.showScrollHint();
+            return;
         }
         
         this.container.scrollTop = this.container.scrollHeight;
@@ -114,15 +147,30 @@ class ScrollManager {
         hint = document.createElement('div');
         hint.id = `${this.containerId}-scroll-hint`;
         hint.className = 'scroll-hint';
-        hint.innerHTML = `
-            <div class="scroll-hint-content">
-                <i class="fas fa-arrow-down animate-bounce"></i>
-                <span>新内容正在生成中</span>
-                <button onclick="scrollManagers['${this.containerId}'].forceScrollToBottom()" class="scroll-hint-btn">
-                    跳到最新
-                </button>
-            </div>
-        `;
+        
+        // 创建内容
+        const hintContent = document.createElement('div');
+        hintContent.className = 'scroll-hint-content';
+        
+        const icon = document.createElement('i');
+        icon.className = 'fas fa-arrow-down animate-bounce';
+        
+        const text = document.createElement('span');
+        text.textContent = '新内容正在生成中';
+        
+        const button = document.createElement('button');
+        button.className = 'scroll-hint-btn';
+        button.textContent = '跳到最新';
+        
+        // 直接绑定事件处理器
+        button.onclick = () => {
+            this.forceScrollToBottom();
+        };
+        
+        hintContent.appendChild(icon);
+        hintContent.appendChild(text);
+        hintContent.appendChild(button);
+        hint.appendChild(hintContent);
         
         // 添加到容器的父元素
         if (this.container.parentElement) {

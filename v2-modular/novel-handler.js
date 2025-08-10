@@ -241,9 +241,11 @@ function detectAndProcessNovelXML() {
                     </div>
                 `;
                 
-                // 初始化或重新初始化滚动管理器
-                const scrollManager = new ScrollManager('novelContainer');
-                scrollManagers['novelContainer'] = scrollManager;
+                // 使用getScrollManager获取或创建，避免重复
+                const scrollManager = getScrollManager('novelContainer');
+                if (scrollManager) {
+                    scrollManager.reset();  // 只重置状态，不重新创建
+                }
             }
         }, 300);
         return;
@@ -297,10 +299,14 @@ function appendToNovelContent(newChars) {
         // 直接追加文本，不使用打字机效果
         wrapper.textContent += newChars;
         
-        // 使用智能滚动管理器
-        const scrollManager = getScrollManager('novelContainer');
-        if (scrollManager) {
-            scrollManager.scrollToBottom();
+        // 使用节流，每100ms最多触发一次滚动
+        const now = Date.now();
+        if (!window.lastNovelScrollTime || now - window.lastNovelScrollTime > 100) {
+            const scrollManager = getScrollManager('novelContainer');
+            if (scrollManager) {
+                scrollManager.scrollToBottom();
+            }
+            window.lastNovelScrollTime = now;
         }
     }
 }
