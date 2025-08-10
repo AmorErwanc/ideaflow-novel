@@ -703,18 +703,25 @@ p:hover .edit-icon:not(.editing) {
 .outline-section.editing-mode {
     border: 2px solid #3b82f6 !important;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    background: white;
+    background: white !important;
+}
+
+/* 确保编辑时内容区域也是白色 */
+.outline-section.editing-mode .editable {
+    background: white !important;
 }
 
 .outline-section.editing-mode textarea {
     background: transparent;
     outline: none;
     border: none;
-    padding: 0;
+    padding: 8px;
     margin: 0;
     font-size: inherit;
     color: inherit;
     font-family: inherit;
+    min-height: 80px;
+    line-height: 1.6;
 }
 
 /* 保存提示 */
