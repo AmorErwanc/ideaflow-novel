@@ -446,8 +446,11 @@ function enableOutlineEdit(sectionId, type) {
         // 创建文本域
         const textarea = document.createElement('textarea');
         textarea.value = originalContent;
-        textarea.className = 'w-full p-2 border border-blue-400 rounded focus:outline-none focus:ring-2 focus:ring-blue-300 resize-none';
-        textarea.rows = 4;
+        // 保持与原容器相同的样式：白色背景、圆角、边框、内边距
+        textarea.className = 'w-full p-4 bg-white rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all resize-none text-gray-600 leading-relaxed';
+        // 动态计算行数以适应内容
+        const lineCount = originalContent.split('\n').length;
+        textarea.rows = Math.max(4, Math.min(lineCount + 1, 10));
         
         wrapper.style.display = 'none';
         element.insertBefore(textarea, wrapper);
