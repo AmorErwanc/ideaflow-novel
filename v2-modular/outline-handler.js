@@ -253,6 +253,13 @@ function processOutlineStreamContent(fullContent) {
     const newContent = fullContent.substring(outlineParserState.lastProcessedIndex);
     if (!newContent) return;
     
+    // 添加调试日志
+    if (newContent.includes('我叫')) {
+        console.log('🔍 检测到"我叫"，当前buffer:', outlineParserState.buffer);
+        console.log('🔍 当前tagBuffer:', outlineParserState.tagBuffer);
+        console.log('🔍 当前处理的标签:', outlineParserState.currentTag);
+    }
+    
     for (let i = 0; i < newContent.length; i++) {
         const char = newContent[i];
         outlineParserState.buffer += char;
@@ -277,23 +284,16 @@ function detectAndProcessOutlineXML() {
     // 检测<plot>标签开始
     if (!outlineParserState.plotStarted && tagBuffer.includes('<plot>')) {
         console.log('📚 检测到plot标签开始');
+        console.log('📊 当前buffer内容:', buffer);
         outlineParserState.plotStarted = true;
         
-        // 找到<plot>标签的位置
+        // 找到<plot>标签的位置并只移除标签
         const plotTagIndex = buffer.indexOf('<plot>');
         if (plotTagIndex !== -1) {
-            // 保留<plot>之前的内容（如果有的话，可能是"小说大纲:"等前置文本）
-            const beforePlot = buffer.substring(0, plotTagIndex);
-            // 只移除<plot>标签本身，保留标签后的所有内容
-            outlineParserState.buffer = buffer.substring(plotTagIndex + 6); // 跳过'<plot>'的6个字符
-            
-            // 如果有前置内容，可以在这里处理或记录
-            if (beforePlot.trim()) {
-                console.log('📝 <plot>标签前的内容:', beforePlot.trim());
-            }
-        } else {
-            // 如果找不到完整标签（可能被分片），清空buffer
-            outlineParserState.buffer = '';
+            // 保留标签后的所有内容
+            const afterTag = buffer.substring(plotTagIndex + 6);
+            outlineParserState.buffer = afterTag;
+            console.log('📊 保留的内容:', afterTag);
         }
         
         // 隐藏加载动画（带渐隐效果）
@@ -324,35 +324,67 @@ function detectAndProcessOutlineXML() {
     };
     
     for (const section of sections) {
-        // 检测标签开始（只在当前没有处理任何标签时才检测）
-        if (!outlineParserState.currentTag && outlineParserState.plotStarted && tagBuffer.includes(`<${section}>`)) {
-            console.log(`📝 ${sectionTitles[section]}开始`);
-            outlineParserState.currentTag = section;
+        // 检测标签开始
+        if (!outlineParserState.currentTag && outlineParserState.plotStarted) {
+            const openTag = `<${section}>`;
             
-            // 找到标签的位置
-            const tagString = `<${section}>`;
-            const tagIndex = buffer.indexOf(tagString);
-            if (tagIndex !== -1) {
-                // 保留标签前的内容（如果有未处理的文本）
-                const beforeTag = buffer.substring(0, tagIndex);
-                if (beforeTag.trim() && outlineParserState.lastSection) {
-                    // 如果有前一个section，将这些内容追加到前一个section
-                    appendToOutlineSection(outlineParserState.lastSection, beforeTag);
-                    outlineParserState.outline[outlineParserState.lastSection] += beforeTag;
+            // 只有当完整标签存在时才处理
+            if (buffer.includes(openTag)) {
+                const openTagIndex = buffer.indexOf(openTag);
+                
+                console.log(`📝 ${sectionTitles[section]}开始`);
+                console.log(`📊 标签位置: ${openTagIndex}, buffer长度: ${buffer.length}`);
+                
+                outlineParserState.currentTag = section;
+                
+                // 处理标签前的内容（如果有）
+                if (openTagIndex > 0) {
+                    const beforeTag = buffer.substring(0, openTagIndex).trim();
+                    if (beforeTag && outlineParserState.lastSection) {
+                        // 将标签前的内容追加到上一个section
+                        appendToOutlineSection(outlineParserState.lastSection, beforeTag);
+                        outlineParserState.outline[outlineParserState.lastSection] += beforeTag;
+                    }
                 }
-                // 从标签结束位置开始截取，保留标签后的所有内容
-                outlineParserState.buffer = buffer.substring(tagIndex + tagString.length);
-            } else {
-                // 如果找不到完整标签（可能被分片），清空buffer
-                outlineParserState.buffer = '';
+                
+                // 只移除标签本身，保留标签后的所有内容
+                const afterTag = buffer.substring(openTagIndex + openTag.length);
+                outlineParserState.buffer = afterTag;
+                console.log(`📊 ${section}标签后的内容:`, afterTag.substring(0, 50));
+                
+                // 记录当前section
+                outlineParserState.lastSection = section;
+                
+                // 立即处理标签后的内容（如果有）
+                if (afterTag && !afterTag.startsWith('<')) {
+                    // 检查是否有结束标签
+                    const endTag = `</${section}>`;
+                    const endTagIndex = afterTag.indexOf(endTag);
+                    
+                    if (endTagIndex !== -1) {
+                        // 有结束标签，提取中间的内容
+                        const content = afterTag.substring(0, endTagIndex);
+                        appendToOutlineSection(section, content);
+                        outlineParserState.outline[section] = content;
+                        outlineParserState.tagsCompleted[section] = true;
+                        outlineParserState.currentTag = null;
+                        outlineParserState.buffer = afterTag.substring(endTagIndex + endTag.length);
+                        console.log(`✅ ${sectionTitles[section]}完成（立即）`);
+                        removeSectionCursor(section);
+                    } else {
+                        // 没有结束标签，先保存当前内容
+                        const validContent = afterTag.split('<')[0]; // 取到下一个标签前的内容
+                        if (validContent) {
+                            appendToOutlineSection(section, validContent);
+                            outlineParserState.outline[section] = validContent;
+                        }
+                    }
+                }
+                return;
             }
-            
-            // 记录当前处理的section
-            outlineParserState.lastSection = section;
-            return;
         }
         
-        // 处理标签内容
+        // 处理标签内容（增量更新）
         if (outlineParserState.currentTag === section && !outlineParserState.tagsCompleted[section]) {
             const endTag = `</${section}>`;
             const endTagIndex = buffer.indexOf(endTag);
@@ -360,40 +392,47 @@ function detectAndProcessOutlineXML() {
             if (endTagIndex !== -1) {
                 // 找到结束标签，提取完整内容
                 const content = buffer.substring(0, endTagIndex);
-                if (content.length > outlineParserState.outline[section].length) {
-                    const newChars = content.substring(outlineParserState.outline[section].length);
-                    appendToOutlineSection(section, newChars);
-                    outlineParserState.outline[section] = content;
+                
+                // 只有内容真正变化时才更新
+                if (content !== outlineParserState.outline[section]) {
+                    const oldLength = outlineParserState.outline[section].length;
+                    const newContent = content.substring(oldLength);
+                    if (newContent) {
+                        appendToOutlineSection(section, newContent);
+                        outlineParserState.outline[section] = content;
+                    }
                 }
+                
                 outlineParserState.tagsCompleted[section] = true;
                 outlineParserState.currentTag = null;
-                // 保留结束标签后的内容
                 outlineParserState.buffer = buffer.substring(endTagIndex + endTag.length);
                 console.log(`✅ ${sectionTitles[section]}完成`);
-                
-                // 移除该部分的光标
                 removeSectionCursor(section);
             } else {
-                // 还没有遇到结束标签，继续累积内容
-                if (buffer.length > outlineParserState.outline[section].length && !buffer.includes('<')) {
-                    const newChars = buffer.substring(outlineParserState.outline[section].length);
-                    appendToOutlineSection(section, newChars);
-                    outlineParserState.outline[section] = buffer;
+                // 还没有结束标签，继续累积内容
+                const currentContent = buffer.split('<')[0]; // 获取到下一个标签前的所有内容
+                
+                if (currentContent.length > outlineParserState.outline[section].length) {
+                    const newChars = currentContent.substring(outlineParserState.outline[section].length);
+                    if (newChars) {
+                        appendToOutlineSection(section, newChars);
+                        outlineParserState.outline[section] = currentContent;
+                    }
                 }
             }
         }
     }
     
     // 检测</plot>标签结束
-    if (outlineParserState.plotStarted && tagBuffer.includes('</plot>')) {
+    if (outlineParserState.plotStarted && buffer.includes('</plot>')) {
         console.log('✅ 大纲解析完成');
         
         // 处理</plot>之前可能还有的内容
         const endPlotIndex = buffer.indexOf('</plot>');
         if (endPlotIndex > 0) {
-            const remainingContent = buffer.substring(0, endPlotIndex);
-            if (remainingContent.trim() && outlineParserState.lastSection) {
-                // 将剩余内容追加到最后一个section
+            const remainingContent = buffer.substring(0, endPlotIndex).trim();
+            if (remainingContent && outlineParserState.lastSection && !outlineParserState.tagsCompleted[outlineParserState.lastSection]) {
+                // 将剩余内容追加到最后一个未完成的section
                 appendToOutlineSection(outlineParserState.lastSection, remainingContent);
                 outlineParserState.outline[outlineParserState.lastSection] += remainingContent;
             }
