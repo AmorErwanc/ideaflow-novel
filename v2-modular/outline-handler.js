@@ -276,7 +276,14 @@ function detectAndProcessOutlineXML() {
     if (!outlineParserState.plotStarted && tagBuffer.endsWith('<plot>')) {
         console.log('📚 检测到plot标签开始');
         outlineParserState.plotStarted = true;
-        outlineParserState.buffer = '';
+        // 只移除标签本身，保留标签后的内容
+        const plotTagIndex = outlineParserState.buffer.lastIndexOf('<plot>');
+        if (plotTagIndex !== -1) {
+            outlineParserState.buffer = outlineParserState.buffer.substring(plotTagIndex + 6); // 跳过'<plot>'
+        } else {
+            // 如果找不到完整标签（可能被分片），清空buffer
+            outlineParserState.buffer = '';
+        }
         
         // 隐藏加载动画（带渐隐效果）
         hideOutlineLoading();

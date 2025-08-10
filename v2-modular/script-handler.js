@@ -227,7 +227,14 @@ function detectAndProcessScriptXML() {
     if (!scriptParserState.scriptStarted && tagBuffer.endsWith('<script>')) {
         console.log('🎬 检测到script标签开始');
         scriptParserState.scriptStarted = true;
-        scriptParserState.buffer = '';
+        // 只移除标签本身，保留标签后的内容
+        const scriptTagIndex = scriptParserState.buffer.lastIndexOf('<script>');
+        if (scriptTagIndex !== -1) {
+            scriptParserState.buffer = scriptParserState.buffer.substring(scriptTagIndex + 8); // 跳过'<script>'
+        } else {
+            // 如果找不到完整标签（可能被分片），清空buffer
+            scriptParserState.buffer = '';
+        }
         return;
     }
     

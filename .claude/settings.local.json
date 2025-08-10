@@ -19,7 +19,8 @@
       "Bash(ls:*)",
       "Bash(rm:*)",
       "Bash(grep:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "mcp__zen__debug"
     ],
     "deny": []
   }

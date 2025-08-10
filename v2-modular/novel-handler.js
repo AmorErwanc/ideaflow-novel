@@ -247,7 +247,14 @@ function detectAndProcessNovelXML() {
     if (!novelParserState.novelStarted && tagBuffer.endsWith('<novel>')) {
         console.log('📖 检测到novel标签开始');
         novelParserState.novelStarted = true;
-        novelParserState.buffer = '';
+        // 只移除标签本身，保留标签后的内容
+        const novelTagIndex = novelParserState.buffer.lastIndexOf('<novel>');
+        if (novelTagIndex !== -1) {
+            novelParserState.buffer = novelParserState.buffer.substring(novelTagIndex + 7); // 跳过'<novel>'
+        } else {
+            // 如果找不到完整标签（可能被分片），清空buffer
+            novelParserState.buffer = '';
+        }
         return;
     }
     
