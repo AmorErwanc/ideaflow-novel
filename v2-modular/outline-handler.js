@@ -436,96 +436,94 @@ function showOutlineControls() {
 
 // 启用大纲编辑模式（仅内容编辑）
 function enableOutlineEdit(sectionId, type) {
-    // 只处理内容编辑，忽略标题编辑请求
+    // 只处理内容编辑
     if (type === 'content') {
-        // 编辑内容
         const element = document.getElementById(`${sectionId}Content`);
         const wrapper = element.querySelector('.content-wrapper');
         const originalContent = wrapper.textContent;
-        
-        // 获取父容器以保持样式一致
-        const parentSection = element.closest('.outline-section');
-        
-        // 创建文本域 - 使用完整的样式确保一致性
-        const textarea = document.createElement('textarea');
+
+        // 获取整个section容器
+        const sectionContainer = element.closest('.outline-section');
+
+        // 创建一个编辑容器，覆盖在原内容上
+        const editContainer = document.createElement('div');
+        editContainer.className = 'absolute inset-0 bg-white rounded-xl p-4 z-10';
+        editContainer.style.boxShadow = '0 0 0 2px #3b82f6';
+
+        // 创建标题显示（保持一致性）
+        const sectionInfo = {
+            'open': { title: '起：开篇', icon: 'play-circle', color: 'green' },
+            'build': { title: '承：发展', icon: 'forward', color: 'blue' },
+            'turn': { title: '转：高潮', icon: 'bolt', color: 'yellow' },
+            'end': { title: '合：结局', icon: 'flag-checkered', color: 'purple' }
+        };
+
+        const info = sectionInfo[sectionId];
+
+        editContainer.innerHTML = `
+            <h4 class="text-lg font-semibold text-gray-800 mb-2 flex items-center">
+                <i class="fas fa-${info.icon} text-${info.color}-500 mr-2"></i>
+                <span>${info.title}</span>
+            </h4>
+            <textarea class="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg 
+                           focus:border-blue-500 focus:outline-none resize-none 
+                           text-gray-600 leading-relaxed"></textarea>
+            <div class="flex justify-end gap-2 mt-2">
+                <button class="cancel-btn px-3 py-1 bg-gray-200 hover:bg-gray-300 
+                              text-gray-700 rounded text-sm transition-colors">
+                    <i class="fas fa-times mr-1"></i>取消
+                </button>
+                <button class="save-btn px-3 py-1 bg-blue-500 hover:bg-blue-600 
+                              text-white rounded text-sm transition-colors">
+                    <i class="fas fa-check mr-1"></i>保存
+                </button>
+            </div>
+        `;
+
+        // 设置相对定位以容纳绝对定位的编辑容器
+        sectionContainer.style.position = 'relative';
+        sectionContainer.appendChild(editContainer);
+
+        // 设置textarea内容和高度
+        const textarea = editContainer.querySelector('textarea');
         textarea.value = originalContent;
-        textarea.className = 'w-full p-3 bg-white border-2 border-blue-400 rounded-lg focus:border-blue-500 focus:outline-none resize-none text-gray-600 leading-relaxed shadow-sm';
-        
-        // 动态计算行数以适应内容
         const lineCount = originalContent.split('\n').length;
         textarea.rows = Math.max(4, Math.min(lineCount + 2, 12));
-        
-        // 不需要给父容器添加editing-mode类，直接给编辑区域添加样式
-        element.classList.add('editing-mode');
-        element.style.padding = '0'; // 移除原有padding避免重复
-        
-        wrapper.style.display = 'none';
-        element.insertBefore(textarea, wrapper);
         textarea.focus();
         textarea.select();
-        
-        // 隐藏编辑图标
-        const editIcon = element.querySelector('.edit-icon');
-        editIcon.style.display = 'none';
-        
-        // 创建控制按钮
-        const controls = createEditControls();
-        element.appendChild(controls);
-        
+
         // 保存功能
-        controls.querySelector('.save-btn').onclick = () => {
+        editContainer.querySelector('.save-btn').onclick = () => {
             const newContent = textarea.value.trim();
             if (newContent) {
                 wrapper.textContent = newContent;
-                // 更新状态
                 outlineParserState.outline[sectionId] = newContent;
                 saveOutlineToStorage();
-                showSaveHint();
+                if (typeof showSaveHint === 'function') {
+                    showSaveHint();
+                }
             }
-            // 移除编辑状态
-            element.classList.remove('editing-mode');
-            element.style.padding = ''; // 恢复原有padding
-            wrapper.style.display = '';
-            textarea.remove();
-            editIcon.style.display = '';
-            controls.remove();
+            editContainer.remove();
+            sectionContainer.style.position = '';
         };
-        
+
         // 取消功能
-        controls.querySelector('.cancel-btn').onclick = () => {
-            wrapper.textContent = originalContent;
-            // 移除编辑状态
-            element.classList.remove('editing-mode');
-            element.style.padding = ''; // 恢复原有padding
-            wrapper.style.display = '';
-            textarea.remove();
-            editIcon.style.display = '';
-            controls.remove();
+        editContainer.querySelector('.cancel-btn').onclick = () => {
+            editContainer.remove();
+            sectionContainer.style.position = '';
         };
-        
-        // 按键事件
+
+        // ESC键取消，Ctrl+Enter保存
         textarea.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
-                controls.querySelector('.cancel-btn').click();
+                editContainer.querySelector('.cancel-btn').click();
+            } else if (e.ctrlKey && e.key === 'Enter') {
+                editContainer.querySelector('.save-btn').click();
             }
         });
     }
 }
 
-// 创建编辑控制按钮
-function createEditControls() {
-    const controls = document.createElement('div');
-    controls.className = 'edit-controls inline-flex gap-2 ml-2';
-    controls.innerHTML = `
-        <button class="save-btn px-2 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600 transition-colors">
-            <i class="fas fa-check"></i>
-        </button>
-        <button class="cancel-btn px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition-colors">
-            <i class="fas fa-times"></i>
-        </button>
-    `;
-    return controls;
-}
 
 // 保存大纲到localStorage
 function saveOutlineToStorage() {
