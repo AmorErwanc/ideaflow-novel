@@ -224,85 +224,108 @@ function detectAndProcessScriptXML() {
     const tagBuffer = scriptParserState.tagBuffer;
     
     // 检测<script>标签开始
-    if (!scriptParserState.scriptStarted && tagBuffer.endsWith('<script>')) {
+    if (!scriptParserState.scriptStarted && tagBuffer.includes('<script>')) {
         console.log('🎬 检测到script标签开始');
         scriptParserState.scriptStarted = true;
-        // 只移除标签本身，保留标签后的内容
-        const scriptTagIndex = scriptParserState.buffer.lastIndexOf('<script>');
-        if (scriptTagIndex !== -1) {
-            scriptParserState.buffer = scriptParserState.buffer.substring(scriptTagIndex + 8); // 跳过'<script>'
-        } else {
-            // 如果找不到完整标签（可能被分片），清空buffer
-            scriptParserState.buffer = '';
-        }
+        // 保持buffer完整，不清理内容
+        console.log('📊 保持buffer完整，等待content标签处理');
         return;
     }
     
-    // 检测<content>标签开始
-    if (scriptParserState.scriptStarted && !scriptParserState.contentStarted && tagBuffer.endsWith('<content>')) {
-        console.log('📝 检测到content标签开始');
-        scriptParserState.contentStarted = true;
-        // 只移除标签本身，保留标签后的内容
-        const tagString = '<content>';
-        const contentTagIndex = scriptParserState.buffer.lastIndexOf(tagString);
-        if (contentTagIndex !== -1) {
-            // 从标签结束位置开始截取，保留标签后的所有内容
-            scriptParserState.buffer = scriptParserState.buffer.substring(contentTagIndex + tagString.length);
-        } else {
-            // 如果找不到完整标签（可能被分片），清空buffer
-            scriptParserState.buffer = '';
-        }
+    // 检测<content>标签开始 - 等待完整标签再开始渲染
+    if (scriptParserState.scriptStarted && !scriptParserState.contentStarted && buffer.includes('<content>')) {
+        const contentTagIndex = buffer.indexOf('<content>');
+        console.log('📝 检测到完整的content开始标签');
         
-        // 隐藏加载动画
+        // 设置当前正在处理content标签
+        scriptParserState.contentStarted = true;
+        
+        // 隐藏加载动画并创建容器
         hideScriptLoading();
         
-        // 延迟显示脚本容器
-        setTimeout(() => {
-            const container = document.getElementById('scriptContainer');
-            if (container) {
-                container.innerHTML = `
-                    <div id="scriptContent" class="prose prose-lg max-w-none">
-                        <div id="scriptText" class="script-display">
-                            <pre class="content-wrapper"></pre>
-                            <span class="typewriter-cursor">|</span>
-                        </div>
+        // 创建脚本容器 - 检查是否已存在，避免重复创建
+        const container = document.getElementById('scriptContainer');
+        if (container && !document.getElementById('scriptContent')) {
+            container.innerHTML = `
+                <div id="scriptContent" class="prose prose-lg max-w-none">
+                    <div id="scriptText" class="script-display">
+                        <pre class="content-wrapper"></pre>
+                        <span class="typewriter-cursor">|</span>
                     </div>
-                `;
-                
-                // 使用getScrollManager获取或创建，避免重复
-                const scrollManager = getScrollManager('scriptContainer');
-                if (scrollManager) {
-                    scrollManager.reset();  // 只重置状态，不重新创建
-                }
+                </div>
+            `;
+            
+            // 使用getScrollManager获取或创建
+            const scrollManager = getScrollManager('scriptContainer');
+            if (scrollManager) {
+                scrollManager.reset();
+                scrollManager.init(); // 重新初始化以绑定新容器
             }
-        }, 300);
+        }
+        
+        // 获取标签后的内容
+        const afterContentTag = buffer.substring(contentTagIndex + 9); // '<content>'.length = 9
+        
+        // 检查是否已有结束标签
+        const endContentIndex = afterContentTag.indexOf('</content>');
+        
+        if (endContentIndex !== -1) {
+            // 找到完整内容
+            const content = afterContentTag.substring(0, endContentIndex);
+            console.log('✅ content标签包含完整内容:', content.substring(0, 50) + '...');
+            scriptParserState.content = content;
+            appendToScriptContent(content);
+            
+            // 标记完成并更新buffer
+            scriptParserState.contentStarted = false;
+            scriptParserState.buffer = afterContentTag.substring(endContentIndex + 10); // '</content>'.length = 10
+        } else {
+            // 没有结束标签，先显示已有内容
+            const availableContent = afterContentTag.split('<')[0]; // 获取到下一个标签前的内容
+            
+            if (availableContent) {
+                appendToScriptContent(availableContent);
+                scriptParserState.content = availableContent;
+            }
+            
+            // 更新buffer，移除开始标签但保留内容
+            scriptParserState.buffer = afterContentTag;
+        }
         return;
     }
     
-    // 处理content标签内容
+    // 处理content标签内容 - 流式追加
     if (scriptParserState.contentStarted && !scriptParserState.isComplete) {
-        if (buffer.includes('</content>')) {
-            // 提取最终内容
-            const content = buffer.substring(0, buffer.indexOf('</content>'));
+        const closeTagIndex = buffer.indexOf('</content>');
+        
+        if (closeTagIndex !== -1) {
+            // 找到结束标签，提取完整内容
+            const content = buffer.substring(0, closeTagIndex);
+            
+            // 追加剩余内容
             if (content.length > scriptParserState.content.length) {
                 const newChars = content.substring(scriptParserState.content.length);
                 appendToScriptContent(newChars);
                 scriptParserState.content = content;
             }
             
-            // 标记content结束
+            // 标记完成
             scriptParserState.contentStarted = false;
-            scriptParserState.buffer = '';
+            scriptParserState.buffer = buffer.substring(closeTagIndex + 10); // '</content>'.length = 10
             console.log('✅ content标签结束');
             
             // 移除光标
             removeScriptCursor();
         } else {
-            // 继续追加内容
-            if (buffer.length > scriptParserState.content.length && !buffer.includes('<')) {
-                const newChars = buffer.substring(scriptParserState.content.length);
-                appendToScriptContent(newChars);
-                scriptParserState.content = buffer;
+            // 继续追加内容（流式显示）
+            const availableContent = buffer.split('<')[0];
+            
+            if (availableContent.length > scriptParserState.content.length) {
+                const newContent = availableContent.substring(scriptParserState.content.length);
+                if (newContent) {
+                    appendToScriptContent(newContent);
+                    scriptParserState.content = availableContent;
+                }
             }
         }
     }

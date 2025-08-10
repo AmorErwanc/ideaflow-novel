@@ -16,11 +16,20 @@ class ScrollManager {
     }
     
     init() {
+        // 如果已有事件处理器且容器存在，先移除旧的事件监听
+        if (this.container && this.handleScrollBound) {
+            this.container.removeEventListener('scroll', this.handleScrollBound);
+            this.container.removeEventListener('wheel', this.handleScrollBound);
+            this.container.removeEventListener('touchmove', this.handleScrollBound);
+        }
+        
         this.container = document.getElementById(this.containerId);
         if (!this.container) return;
         
-        // 绑定事件处理器到正确的上下文
-        this.handleScrollBound = this.handleUserScroll.bind(this);
+        // 绑定事件处理器到正确的上下文（如果还没有绑定）
+        if (!this.handleScrollBound) {
+            this.handleScrollBound = this.handleUserScroll.bind(this);
+        }
         
         // 监听滚动事件
         this.container.addEventListener('scroll', this.handleScrollBound);
@@ -100,11 +109,17 @@ class ScrollManager {
     
     // 自动滚动到底部（只在允许时执行）
     scrollToBottom() {
+        // 检查容器是否还在DOM中，如果不在则重新获取
+        if (!this.container || !this.container.isConnected) {
+            this.container = document.getElementById(this.containerId);
+            if (!this.container) return;
+        }
+        
         // 多重检查确保不干扰用户阅读
         const now = Date.now();
         
         // 1. 基础检查
-        if (!this.container || this.isUserScrolling) {
+        if (this.isUserScrolling) {
             return;
         }
         

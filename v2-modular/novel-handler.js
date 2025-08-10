@@ -244,85 +244,108 @@ function detectAndProcessNovelXML() {
     const tagBuffer = novelParserState.tagBuffer;
     
     // 检测<novel>标签开始
-    if (!novelParserState.novelStarted && tagBuffer.endsWith('<novel>')) {
+    if (!novelParserState.novelStarted && tagBuffer.includes('<novel>')) {
         console.log('📖 检测到novel标签开始');
         novelParserState.novelStarted = true;
-        // 只移除标签本身，保留标签后的内容
-        const novelTagIndex = novelParserState.buffer.lastIndexOf('<novel>');
-        if (novelTagIndex !== -1) {
-            novelParserState.buffer = novelParserState.buffer.substring(novelTagIndex + 7); // 跳过'<novel>'
-        } else {
-            // 如果找不到完整标签（可能被分片），清空buffer
-            novelParserState.buffer = '';
-        }
+        // 保持buffer完整，让后续的text标签处理来管理内容
+        console.log('📊 保持buffer完整，等待text标签处理');
         return;
     }
     
-    // 检测<text>标签开始
-    if (novelParserState.novelStarted && !novelParserState.textStarted && tagBuffer.endsWith('<text>')) {
-        console.log('📝 检测到text标签开始');
-        novelParserState.textStarted = true;
-        // 只移除标签本身，保留标签后的内容
-        const tagString = '<text>';
-        const textTagIndex = novelParserState.buffer.lastIndexOf(tagString);
-        if (textTagIndex !== -1) {
-            // 从标签结束位置开始截取，保留标签后的所有内容
-            novelParserState.buffer = novelParserState.buffer.substring(textTagIndex + tagString.length);
-        } else {
-            // 如果找不到完整标签（可能被分片），清空buffer
-            novelParserState.buffer = '';
-        }
+    // 检测<text>标签开始 - 等待完整标签再开始渲染
+    if (novelParserState.novelStarted && !novelParserState.textStarted && buffer.includes('<text>')) {
+        const textTagIndex = buffer.indexOf('<text>');
+        console.log('📝 检测到完整的text开始标签');
         
-        // 隐藏加载动画
+        // 设置当前正在处理text标签
+        novelParserState.textStarted = true;
+        
+        // 隐藏加载动画并创建容器
         hideNovelLoading();
         
-        // 延迟显示小说容器
-        setTimeout(() => {
-            const container = document.getElementById('novelContainer');
-            if (container) {
-                container.innerHTML = `
-                    <div id="novelContent" class="prose prose-lg max-w-none">
-                        <div id="novelText" class="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                            <span class="content-wrapper"></span>
-                            <span class="typewriter-cursor">|</span>
-                        </div>
+        // 创建小说容器 - 检查是否已存在，避免重复创建
+        const container = document.getElementById('novelContainer');
+        if (container && !document.getElementById('novelContent')) {
+            container.innerHTML = `
+                <div id="novelContent" class="prose prose-lg max-w-none">
+                    <div id="novelText" class="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                        <span class="content-wrapper"></span>
+                        <span class="typewriter-cursor">|</span>
                     </div>
-                `;
-                
-                // 使用getScrollManager获取或创建，避免重复
-                const scrollManager = getScrollManager('novelContainer');
-                if (scrollManager) {
-                    scrollManager.reset();  // 只重置状态，不重新创建
-                }
+                </div>
+            `;
+            
+            // 使用getScrollManager获取或创建
+            const scrollManager = getScrollManager('novelContainer');
+            if (scrollManager) {
+                scrollManager.reset();
+                scrollManager.init(); // 重新初始化以绑定新容器
             }
-        }, 300);
+        }
+        
+        // 获取标签后的内容
+        const afterTextTag = buffer.substring(textTagIndex + 6); // '<text>'.length = 6
+        
+        // 检查是否已有结束标签
+        const endTextIndex = afterTextTag.indexOf('</text>');
+        
+        if (endTextIndex !== -1) {
+            // 找到完整内容
+            const content = afterTextTag.substring(0, endTextIndex);
+            console.log('✅ text标签包含完整内容:', content.substring(0, 50) + '...');
+            novelParserState.content = content;
+            appendToNovelContent(content);
+            
+            // 标记完成并更新buffer
+            novelParserState.textStarted = false;
+            novelParserState.buffer = afterTextTag.substring(endTextIndex + 7); // '</text>'.length = 7
+        } else {
+            // 没有结束标签，先显示已有内容
+            const availableContent = afterTextTag.split('<')[0]; // 获取到下一个标签前的内容
+            
+            if (availableContent) {
+                appendToNovelContent(availableContent);
+                novelParserState.content = availableContent;
+            }
+            
+            // 更新buffer，移除开始标签但保留内容
+            novelParserState.buffer = afterTextTag;
+        }
         return;
     }
     
-    // 处理text标签内容
+    // 处理text标签内容 - 流式追加
     if (novelParserState.textStarted && !novelParserState.isComplete) {
-        if (buffer.includes('</text>')) {
-            // 提取最终内容
-            const content = buffer.substring(0, buffer.indexOf('</text>'));
+        const closeTagIndex = buffer.indexOf('</text>');
+        
+        if (closeTagIndex !== -1) {
+            // 找到结束标签，提取完整内容
+            const content = buffer.substring(0, closeTagIndex);
+            
+            // 追加剩余内容
             if (content.length > novelParserState.content.length) {
                 const newChars = content.substring(novelParserState.content.length);
                 appendToNovelContent(newChars);
                 novelParserState.content = content;
             }
             
-            // 标记text结束
+            // 标记完成
             novelParserState.textStarted = false;
-            novelParserState.buffer = '';
+            novelParserState.buffer = buffer.substring(closeTagIndex + 7); // '</text>'.length = 7
             console.log('✅ text标签结束');
             
             // 移除光标
             removeNovelCursor();
         } else {
-            // 继续追加内容
-            if (buffer.length > novelParserState.content.length && !buffer.includes('<')) {
-                const newChars = buffer.substring(novelParserState.content.length);
-                appendToNovelContent(newChars);
-                novelParserState.content = buffer;
+            // 继续追加内容（流式显示）
+            const availableContent = buffer.split('<')[0];
+            
+            if (availableContent.length > novelParserState.content.length) {
+                const newContent = availableContent.substring(novelParserState.content.length);
+                if (newContent) {
+                    appendToNovelContent(newContent);
+                    novelParserState.content = availableContent;
+                }
             }
         }
     }
