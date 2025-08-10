@@ -672,6 +672,33 @@ p:hover .edit-icon:not(.editing) {
     display: none;
 }
 
+/* 大纲编辑样式 */
+.outline-section {
+    position: relative;
+}
+
+.outline-section .edit-icon {
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.outline-section h4 .edit-icon {
+    margin-left: auto;
+}
+
+.outline-section .editable {
+    position: relative;
+}
+
+.outline-section .editable:hover .edit-icon {
+    opacity: 0.6;
+}
+
+.outline-section textarea {
+    font-family: inherit;
+    line-height: 1.6;
+}
+
 /* 保存提示 */
 .save-hint {
     position: fixed;

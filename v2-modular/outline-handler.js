@@ -334,15 +334,19 @@ function createEmptyOutlineStructure() {
     
     sectionInfo.forEach(section => {
         const sectionDiv = document.createElement('div');
-        sectionDiv.className = 'outline-section bg-white rounded-xl p-4 shadow-sm border border-gray-200';
+        sectionDiv.className = 'outline-section bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow';
         sectionDiv.innerHTML = `
-            <h4 class="text-lg font-semibold text-gray-800 mb-2 flex items-center">
-                <i class="fas fa-${section.icon} text-${section.color}-500 mr-2"></i>
-                ${section.title}
+            <h4 class="text-lg font-semibold text-gray-800 mb-2 flex items-center justify-between editable" data-section="${section.id}-title">
+                <span class="flex items-center">
+                    <i class="fas fa-${section.icon} text-${section.color}-500 mr-2"></i>
+                    <span class="title-text">${section.title}</span>
+                </span>
+                <i class="fas fa-edit edit-icon text-blue-500 opacity-0 hover:opacity-100 transition-opacity cursor-pointer" onclick="enableOutlineEdit('${section.id}', 'title')"></i>
             </h4>
-            <div id="${section.id}Content" class="text-gray-600 leading-relaxed editable-section">
+            <div id="${section.id}Content" class="text-gray-600 leading-relaxed relative editable" data-section="${section.id}-content">
                 <span class="content-wrapper"></span>
                 <span class="typewriter-cursor">|</span>
+                <i class="fas fa-edit edit-icon text-blue-500 opacity-0 hover:opacity-100 transition-opacity cursor-pointer absolute top-0 right-0" onclick="enableOutlineEdit('${section.id}', 'content')"></i>
             </div>
         `;
         container.appendChild(sectionDiv);
@@ -378,18 +382,25 @@ function finalizeOutline() {
         cursor.remove();
     });
     
-    // 添加编辑功能
-    document.querySelectorAll('.editable-section').forEach(section => {
-        section.classList.add('cursor-pointer', 'hover:bg-gray-50', 'transition-colors', 'p-2', 'rounded');
-        section.setAttribute('contenteditable', 'false');
+    // 启用悬停显示编辑图标
+    document.querySelectorAll('.outline-section').forEach(section => {
+        section.addEventListener('mouseenter', function() {
+            this.querySelectorAll('.edit-icon').forEach(icon => {
+                icon.style.opacity = '0.6';
+            });
+        });
         
-        // 添加编辑图标
-        const editIcon = document.createElement('span');
-        editIcon.className = 'edit-icon ml-2';
-        editIcon.innerHTML = '<i class="fas fa-edit"></i>';
-        editIcon.onclick = () => enableEditMode(section);
-        section.appendChild(editIcon);
+        section.addEventListener('mouseleave', function() {
+            this.querySelectorAll('.edit-icon').forEach(icon => {
+                if (!icon.classList.contains('editing')) {
+                    icon.style.opacity = '0';
+                }
+            });
+        });
     });
+    
+    // 保存完整大纲到localStorage
+    saveOutlineToStorage();
 }
 
 // 显示大纲控制区域
@@ -427,42 +438,148 @@ function showOutlineControls() {
 }
 
 // 启用编辑模式
-function enableEditMode(element) {
-    element.setAttribute('contenteditable', 'true');
-    element.focus();
+// 启用大纲编辑模式
+function enableOutlineEdit(sectionId, type) {
+    let element, originalContent;
     
-    // 创建保存和取消按钮
+    if (type === 'title') {
+        // 编辑标题
+        element = document.querySelector(`[data-section="${sectionId}-title"]`);
+        const titleSpan = element.querySelector('.title-text');
+        originalContent = titleSpan.textContent;
+        
+        // 创建输入框
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = originalContent;
+        input.className = 'px-2 py-1 border border-blue-400 rounded focus:outline-none focus:ring-2 focus:ring-blue-300';
+        input.style.width = '150px';
+        
+        titleSpan.replaceWith(input);
+        input.focus();
+        input.select();
+        
+        // 隐藏编辑图标
+        const editIcon = element.querySelector('.edit-icon');
+        editIcon.style.display = 'none';
+        
+        // 创建控制按钮
+        const controls = createEditControls();
+        element.appendChild(controls);
+        
+        // 保存功能
+        controls.querySelector('.save-btn').onclick = () => {
+            const newTitle = input.value.trim();
+            if (newTitle) {
+                const newTitleSpan = document.createElement('span');
+                newTitleSpan.className = 'title-text';
+                newTitleSpan.textContent = newTitle;
+                input.replaceWith(newTitleSpan);
+                
+                // 保存到状态（如果需要）
+                showSaveHint();
+            }
+            editIcon.style.display = '';
+            controls.remove();
+        };
+        
+        // 取消功能
+        controls.querySelector('.cancel-btn').onclick = () => {
+            const titleSpan = document.createElement('span');
+            titleSpan.className = 'title-text';
+            titleSpan.textContent = originalContent;
+            input.replaceWith(titleSpan);
+            editIcon.style.display = '';
+            controls.remove();
+        };
+        
+        // 按键事件
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                controls.querySelector('.save-btn').click();
+            } else if (e.key === 'Escape') {
+                controls.querySelector('.cancel-btn').click();
+            }
+        });
+        
+    } else if (type === 'content') {
+        // 编辑内容
+        element = document.getElementById(`${sectionId}Content`);
+        const wrapper = element.querySelector('.content-wrapper');
+        originalContent = wrapper.textContent;
+        
+        // 创建文本域
+        const textarea = document.createElement('textarea');
+        textarea.value = originalContent;
+        textarea.className = 'w-full p-2 border border-blue-400 rounded focus:outline-none focus:ring-2 focus:ring-blue-300 resize-none';
+        textarea.rows = 4;
+        
+        wrapper.style.display = 'none';
+        element.insertBefore(textarea, wrapper);
+        textarea.focus();
+        
+        // 隐藏编辑图标
+        const editIcon = element.querySelector('.edit-icon');
+        editIcon.style.display = 'none';
+        
+        // 创建控制按钮
+        const controls = createEditControls();
+        element.appendChild(controls);
+        
+        // 保存功能
+        controls.querySelector('.save-btn').onclick = () => {
+            const newContent = textarea.value.trim();
+            if (newContent) {
+                wrapper.textContent = newContent;
+                // 更新状态
+                outlineParserState.outline[sectionId] = newContent;
+                saveOutlineToStorage();
+                showSaveHint();
+            }
+            wrapper.style.display = '';
+            textarea.remove();
+            editIcon.style.display = '';
+            controls.remove();
+        };
+        
+        // 取消功能
+        controls.querySelector('.cancel-btn').onclick = () => {
+            wrapper.textContent = originalContent;
+            wrapper.style.display = '';
+            textarea.remove();
+            editIcon.style.display = '';
+            controls.remove();
+        };
+        
+        // 按键事件
+        textarea.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                controls.querySelector('.cancel-btn').click();
+            }
+        });
+    }
+}
+
+// 创建编辑控制按钮
+function createEditControls() {
     const controls = document.createElement('div');
-    controls.className = 'edit-controls mt-2 flex gap-2';
+    controls.className = 'edit-controls inline-flex gap-2 ml-2';
     controls.innerHTML = `
-        <button class="save-btn px-3 py-1 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600 transition-colors">
-            <i class="fas fa-check mr-1"></i>保存
+        <button class="save-btn px-2 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600 transition-colors">
+            <i class="fas fa-check"></i>
         </button>
-        <button class="cancel-btn px-3 py-1 bg-red-500 text-white rounded-lg text-sm hover:bg-red-600 transition-colors">
-            <i class="fas fa-times mr-1"></i>取消
+        <button class="cancel-btn px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition-colors">
+            <i class="fas fa-times"></i>
         </button>
     `;
-    
-    element.parentNode.appendChild(controls);
-    
-    // 保存原始内容
-    const originalContent = element.querySelector('.content-wrapper').textContent;
-    
-    // 绑定事件
-    controls.querySelector('.save-btn').onclick = () => {
-        const newContent = element.querySelector('.content-wrapper').textContent;
-        const sectionId = element.id.replace('Content', '');
-        outlineParserState.outline[sectionId] = newContent;
+    return controls;
+}
+
+// 保存大纲到localStorage
+function saveOutlineToStorage() {
+    if (outlineParserState.outline) {
         localStorage.setItem('currentOutline', JSON.stringify(outlineParserState.outline));
-        element.setAttribute('contenteditable', 'false');
-        controls.remove();
-    };
-    
-    controls.querySelector('.cancel-btn').onclick = () => {
-        element.querySelector('.content-wrapper').textContent = originalContent;
-        element.setAttribute('contenteditable', 'false');
-        controls.remove();
-    };
+    }
 }
 
 // 显示大纲加载动画（完全复用脑洞的样式）
