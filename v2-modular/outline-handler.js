@@ -25,8 +25,17 @@ const outlineParserState = {
 async function generateOutline() {
     console.log('📝 开始生成大纲');
     
-    // 清除生成标记
-    window.isGeneratingOutline = false;
+    // 立即清空容器，防止旧内容闪现
+    const container = document.getElementById('outlineContainer');
+    if (container) {
+        container.innerHTML = '';
+    }
+    
+    // 静默清理后续步骤的数据（因为要生成新大纲）
+    if (typeof clearDependentSteps === 'function') {
+        clearDependentSteps(3);
+        console.log('🔄 生成新大纲，已清理后续步骤数据');
+    }
     
     // 获取选中的脑洞
     if (!selectedIdea) {
@@ -51,8 +60,7 @@ async function generateOutline() {
     
     console.log('📖 选中的脑洞:', ideaData);
     
-    // 清空容器并显示加载动画（与脑洞一致的样式）
-    const container = document.getElementById('outlineContainer');
+    // 显示加载动画
     if (container) {
         showOutlineLoading();
     }
@@ -85,6 +93,16 @@ async function generateOutline() {
                 // 保存大纲到localStorage
                 localStorage.setItem('currentOutline', JSON.stringify(outlineParserState.outline));
                 
+                // 更新工作流状态 - 大纲生成完成
+                if (typeof workflowState !== 'undefined') {
+                    workflowState.steps[3].completed = true;
+                    workflowState.steps[3].hasData = true;
+                    console.log('✅ 大纲生成完成，更新状态');
+                }
+                
+                // 清除生成标记
+                window.isGeneratingOutline = false;
+                
                 // 启用下一步按钮
                 if (generateBtn) {
                     generateBtn.disabled = false;
@@ -114,6 +132,18 @@ async function regenerateOutline() {
     
     console.log('🔄 重新生成大纲');
     
+    // 立即清空容器，防止旧内容闪现
+    const container = document.getElementById('outlineContainer');
+    if (container) {
+        container.innerHTML = '';
+    }
+    
+    // 静默清理后续步骤的数据（因为要重新生成大纲）
+    if (typeof clearDependentSteps === 'function') {
+        clearDependentSteps(3);
+        console.log('🔄 重新生成大纲，已清理后续步骤数据');
+    }
+    
     // 获取选中的脑洞信息
     const story = parserState.stories.get(String(selectedIdea));
     if (!story) {
@@ -128,8 +158,7 @@ async function regenerateOutline() {
         content: story.content
     };
     
-    // 清空容器并显示加载动画
-    const container = document.getElementById('outlineContainer');
+    // 显示加载动画
     if (container) {
         showOutlineLoading(true); // true表示重新生成
     }
@@ -281,6 +310,7 @@ function detectAndProcessOutlineXML() {
         if (outlineParserState.plotStarted && tagBuffer.endsWith(`<${section}>`)) {
             console.log(`📝 ${sectionTitles[section]}开始`);
             outlineParserState.currentTag = section;
+            // 清空buffer，准备接收新内容
             outlineParserState.buffer = '';
             return;
         }

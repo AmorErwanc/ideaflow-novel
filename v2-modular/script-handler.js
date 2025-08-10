@@ -15,6 +15,14 @@ const scriptParserState = {
 async function generateScript() {
     console.log('🎬 开始生成脚本');
     
+    // 立即清空容器，防止旧内容闪现
+    const container = document.getElementById('scriptContainer');
+    if (container) {
+        container.innerHTML = '';
+    }
+    
+    // 生成脚本时不需要清理后续数据（因为脚本是最后一步）
+    
     // 获取小说内容
     const novelContent = novelParserState.content || localStorage.getItem('currentNovel');
     if (!novelContent) {
@@ -25,8 +33,7 @@ async function generateScript() {
     
     console.log('📝 使用小说内容生成脚本');
     
-    // 清空容器并显示加载动画
-    const container = document.getElementById('scriptContainer');
+    // 显示加载动画
     if (container) {
         showScriptLoading();
         // 重置滚动管理器
@@ -64,6 +71,16 @@ async function generateScript() {
                 // 保存脚本到localStorage
                 localStorage.setItem('currentScript', scriptParserState.content);
                 
+                // 更新工作流状态 - 脚本生成完成
+                if (typeof workflowState !== 'undefined') {
+                    workflowState.steps[5].completed = true;
+                    workflowState.steps[5].hasData = true;
+                    console.log('✅ 脚本生成完成，更新状态');
+                }
+                
+                // 清除生成标记
+                window.isGeneratingScript = false;
+                
                 // 启用完成按钮
                 if (completeBtn) {
                     completeBtn.disabled = false;
@@ -93,6 +110,12 @@ async function regenerateScript() {
     
     console.log('🔄 重新生成脚本');
     
+    // 立即清空容器，防止旧内容闪现
+    const container = document.getElementById('scriptContainer');
+    if (container) {
+        container.innerHTML = '';
+    }
+    
     // 获取小说内容
     const novelContent = novelParserState.content || localStorage.getItem('currentNovel');
     if (!novelContent) {
@@ -101,8 +124,7 @@ async function regenerateScript() {
         return;
     }
     
-    // 清空容器并显示加载动画
-    const container = document.getElementById('scriptContainer');
+    // 显示加载动画
     if (container) {
         showScriptLoading(true); // true表示重新生成
     }
@@ -213,6 +235,7 @@ function detectAndProcessScriptXML() {
     if (scriptParserState.scriptStarted && !scriptParserState.contentStarted && tagBuffer.endsWith('<content>')) {
         console.log('📝 检测到content标签开始');
         scriptParserState.contentStarted = true;
+        // 清空buffer，准备接收content内容
         scriptParserState.buffer = '';
         
         // 隐藏加载动画

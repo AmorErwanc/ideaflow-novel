@@ -142,23 +142,8 @@ function finalizeStoryCard(storyNum) {
 function selectIdea(storyNum) {
     console.log(`选择脑洞: ${storyNum}`);
     
-    // 如果选择了不同的脑洞，清空大纲缓存
-    if (selectedIdea !== null && selectedIdea !== storyNum) {
-        // 清空大纲缓存
-        localStorage.removeItem('currentOutline');
-        console.log('🗑️ 清空大纲缓存（选择了新脑洞）');
-        
-        // 清空大纲容器内容
-        const outlineContainer = document.getElementById('outlineContainer');
-        if (outlineContainer) {
-            outlineContainer.innerHTML = '';
-        }
-        
-        // 重置大纲解析状态
-        if (typeof resetOutlineParserState === 'function') {
-            resetOutlineParserState();
-        }
-    }
+    // 仅记录选择，不清理任何数据
+    // 数据清理将在用户点击"生成大纲"时进行
     
     // 如果已经选中相同的卡片，直接返回
     if (selectedIdea === storyNum) return;

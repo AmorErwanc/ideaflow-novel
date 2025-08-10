@@ -6,6 +6,26 @@ let currentStreamController = null;
 let selectedIdea = null;
 let stepHistory = [0]; // 记录已访问过的步骤
 
+// 工作流状态管理 - 记录每个步骤的完成状态和数据状态
+const workflowState = {
+    steps: {
+        0: { completed: true, hasData: false },  // 模式选择 - 始终完成
+        1: { completed: false, hasData: false }, // 创意输入
+        2: { completed: false, hasData: false }, // 脑洞生成
+        3: { completed: false, hasData: false }, // 大纲创作
+        4: { completed: false, hasData: false }, // 小说撰写
+        5: { completed: false, hasData: false }  // 脚本生成
+    },
+    // 数据依赖关系 - 修改某步骤时需要清理的后续步骤
+    dependencies: {
+        0: [1, 2, 3, 4, 5],  // 切换模式清理所有后续
+        1: [2, 3, 4, 5],     // 修改创意输入清理脑洞及后续
+        2: [3, 4, 5],        // 重新选择脑洞清理大纲及后续
+        3: [4, 5],           // 修改大纲清理小说及后续
+        4: [5]               // 修改小说清理脚本
+    }
+};
+
 // 步骤信息映射 - 创意输入(step1)不在进度条显示
 const stepInfo = {
     0: { name: '模式选择', icon: 'compass', color: 'indigo', displayIndex: 0 },
@@ -34,8 +54,12 @@ const parserState = {
 // 快速生成模式 - 直接跳到脑洞生成
 function handleQuickGenerate() {
     console.log('快速生成模式 - 直接开始流式生成');
+    
     currentMode = 'quick';
     selectedMode = 'quick'; // 设置选择的模式
+    
+    // 更新状态
+    workflowState.steps[0].completed = true;
     
     // 显示模式指示器
     const indicator = document.getElementById('modeIndicator');
@@ -46,8 +70,10 @@ function handleQuickGenerate() {
     currentStep = 2;
     updateUI();
     
-    // 立即开始流式生成
+    // 立即开始流式生成，生成时会自动清理旧数据
     setTimeout(() => {
+        // 清理所有后续数据（静默处理）
+        clearAllData();
         startStreamingIdeas();
     }, 500);
 }
@@ -55,8 +81,12 @@ function handleQuickGenerate() {
 // 定制模式 - 先到创意输入页
 function handleCustomMode() {
     console.log('定制创作模式');
+    
     currentMode = 'custom';
     selectedMode = 'custom'; // 设置选择的模式
+    
+    // 更新状态
+    workflowState.steps[0].completed = true;
     
     // 显示模式指示器
     const indicator = document.getElementById('modeIndicator');
@@ -70,10 +100,41 @@ function handleCustomMode() {
 
 // 返回模式选择
 function goBackToModeSelection() {
+    // 直接返回，不清理数据
     currentStep = 0;
     currentMode = null;
     document.getElementById('modeIndicator').classList.add('hidden');
     updateUI();
+}
+
+// 检查是否有任何数据
+function hasAnyData() {
+    return Object.keys(workflowState.steps).some(step => 
+        step !== '0' && workflowState.steps[step].hasData
+    );
+}
+
+// 清除所有数据
+function clearAllData() {
+    // 清除所有步骤状态
+    Object.keys(workflowState.steps).forEach(step => {
+        if (step !== '0') {
+            workflowState.steps[step].completed = false;
+            workflowState.steps[step].hasData = false;
+        }
+    });
+    
+    // 清除全局变量
+    selectedIdea = null;
+    
+    // 清除localStorage
+    localStorage.removeItem('userCreativeInput');
+    localStorage.removeItem('userIdeaCount');
+    localStorage.removeItem('currentOutline');
+    localStorage.removeItem('currentNovel');
+    localStorage.removeItem('currentScript');
+    
+    console.log('已清除所有创作数据');
 }
 
 // 更新脑洞数量显示
@@ -139,6 +200,10 @@ function processCustomInput() {
     // 保存到全局变量供API使用
     window.customIdeaCount = ideaCount;
     
+    // 更新工作流状态 - 创意输入完成
+    workflowState.steps[1].completed = true;
+    workflowState.steps[1].hasData = true;
+    
     // 跳到脑洞生成步骤
     currentStep = 2;
     updateUI();
@@ -149,6 +214,57 @@ function processCustomInput() {
     }, 500);
 }
 
+// 清理依赖步骤的数据
+function clearDependentSteps(fromStep) {
+    const dependentSteps = workflowState.dependencies[fromStep] || [];
+    
+    dependentSteps.forEach(step => {
+        // 清理步骤状态
+        workflowState.steps[step].completed = false;
+        workflowState.steps[step].hasData = false;
+        
+        // 清理localStorage中的数据
+        switch(step) {
+            case 2:
+                // 清理脑洞数据
+                selectedIdea = null;
+                break;
+            case 3:
+                // 清理大纲数据
+                localStorage.removeItem('currentOutline');
+                break;
+            case 4:
+                // 清理小说数据
+                localStorage.removeItem('currentNovel');
+                break;
+            case 5:
+                // 清理脚本数据
+                localStorage.removeItem('currentScript');
+                break;
+        }
+    });
+    
+    console.log(`已清理步骤 ${fromStep} 的后续依赖数据:`, dependentSteps);
+}
+
+// 检查是否需要确认（返回到已完成的步骤时）
+function needsConfirmation(targetStep) {
+    // 如果目标步骤已完成，且有后续步骤有数据，需要确认
+    if (workflowState.steps[targetStep].completed) {
+        const dependentSteps = workflowState.dependencies[targetStep] || [];
+        return dependentSteps.some(step => workflowState.steps[step].hasData);
+    }
+    return false;
+}
+
+// 获取将被清除的步骤名称列表
+function getAffectedStepsNames(fromStep) {
+    const dependentSteps = workflowState.dependencies[fromStep] || [];
+    return dependentSteps
+        .filter(step => workflowState.steps[step].hasData)
+        .map(step => stepInfo[step].name);
+}
+
 // 跳转到指定步骤
 function goToStep(step) {
     // 检查步骤是否可访问
@@ -157,6 +273,7 @@ function goToStep(step) {
         return;
     }
     
+    // 直接跳转，不清理任何数据，只是查看
     currentStep = step;
     
     // 添加到历史记录
@@ -168,6 +285,12 @@ function goToStep(step) {
     
     // 如果跳转到大纲步骤
     if (step === 3) {
+        // 如果正在生成大纲，不恢复缓存
+        if (window.isGeneratingOutline) {
+            // 生成函数会自己处理
+            return;
+        }
+        
         // 检查是否有缓存的大纲内容
         const cachedOutline = localStorage.getItem('currentOutline');
         const outlineContainer = document.getElementById('outlineContainer');
@@ -190,12 +313,19 @@ function goToStep(step) {
     }
     // 如果跳转到小说步骤
     if (step === 4) {
+        // 如果正在生成小说，不恢复缓存
+        if (window.isGeneratingNovel) {
+            // 生成函数会自己处理
+            return;
+        }
+        
         // 检查是否有缓存的小说内容
         const cachedNovel = localStorage.getItem('currentNovel');
         const novelText = document.getElementById('novelText');
         
-        // 如果没有内容也没有缓存，且不是从按钮跳转来的，才自动生成
-        if (!cachedNovel && !novelText?.textContent && !window.isGeneratingNovel) {
+        // 如果没有内容也没有缓存，自动生成
+        if (!cachedNovel && !novelText?.textContent) {
+            window.isGeneratingNovel = true;
             setTimeout(() => {
                 generateNovel();
             }, 500);
@@ -204,11 +334,28 @@ function goToStep(step) {
             // TODO: 实现restoreCachedNovel函数
         }
     }
-    // 如果跳转到脚本步骤且还没有生成脚本，自动生成
-    if (step === 5 && !document.getElementById('scenesContainer')?.children.length) {
-        setTimeout(() => {
-            generateScript();
-        }, 500);
+    // 如果跳转到脚本步骤
+    if (step === 5) {
+        // 如果正在生成脚本，不恢复缓存
+        if (window.isGeneratingScript) {
+            // 生成函数会自己处理
+            return;
+        }
+        
+        // 检查是否有缓存的脚本内容
+        const cachedScript = localStorage.getItem('currentScript');
+        const scriptText = document.getElementById('scriptText');
+        
+        // 如果没有内容也没有缓存，自动生成
+        if (!cachedScript && !scriptText?.textContent) {
+            window.isGeneratingScript = true;
+            setTimeout(() => {
+                generateScript();
+            }, 500);
+        } else if (cachedScript && !scriptText?.textContent) {
+            // 如果有缓存，恢复缓存内容
+            // TODO: 实现restoreCachedScript函数
+        }
     }
 }
 
@@ -217,48 +364,62 @@ function canAccessStep(step) {
     // 模式选择始终可访问
     if (step === 0) return true;
     
-    // 创意输入需要选择了定制模式
-    if (step === 1) return currentMode === 'custom';
+    // 创意输入需要选择了定制模式，且已完成或正在进行
+    if (step === 1) {
+        return currentMode === 'custom' || workflowState.steps[1].completed;
+    }
     
-    // 脑洞生成需要选择了模式
-    if (step === 2) return currentMode !== null;
+    // 脑洞生成需要选择了模式，或已经完成过
+    if (step === 2) {
+        return currentMode !== null || workflowState.steps[2].completed;
+    }
     
-    // 大纲创作需要选择了脑洞
-    if (step === 3) return selectedIdea !== null;
+    // 其他步骤：如果已完成则可以访问（允许返回修改）
+    // 如果未完成，则需要满足前置条件
+    if (step === 3) {
+        // 大纲：已完成可返回，未完成需要选择了脑洞
+        return workflowState.steps[3].completed || selectedIdea !== null;
+    }
     
-    // 小说撰写需要生成了大纲
-    if (step === 4) return stepHistory.includes(3);
+    if (step === 4) {
+        // 小说：已完成可返回，未完成需要生成了大纲
+        return workflowState.steps[4].completed || workflowState.steps[3].hasData;
+    }
     
-    // 脚本生成需要生成了小说
-    if (step === 5) return stepHistory.includes(4);
+    if (step === 5) {
+        // 脚本：已完成可返回，未完成需要生成了小说
+        return workflowState.steps[5].completed || workflowState.steps[4].hasData;
+    }
     
     return false;
 }
 
 // 跳转到小说步骤并生成
 function goToNovelStep() {
+    // 设置生成标记，防止缓存恢复
+    window.isGeneratingNovel = true;
+    
     // 跳转到小说页面
     goToStep(4);
     
-    // 如果还没有生成小说，自动生成
+    // 自动生成小说
     setTimeout(() => {
-        if (!document.getElementById('novelText')?.textContent) {
-            generateNovel();
-        }
-    }, 500);
+        generateNovel();
+    }, 100);
 }
 
 // 跳转到脚本步骤并生成
 function goToScriptStep() {
+    // 设置生成标记，防止缓存恢复
+    window.isGeneratingScript = true;
+    
     // 跳转到脚本页面
     goToStep(5);
     
-    // 如果还没有生成脚本，自动生成
+    // 自动生成脚本
     setTimeout(() => {
-        if (!document.getElementById('scriptText')?.textContent) {
-            generateScript();
-        }
-    }, 500);
+        generateScript();
+    }, 100);
 }
 
 // 切换到下一步
@@ -271,10 +432,6 @@ function nextStep() {
         currentStep = 3;
         // 设置生成标记，防止缓存恢复
         window.isGeneratingOutline = true;
-        // 自动生成大纲
-        setTimeout(() => {
-            generateOutline();
-        }, 500);
     } else if (currentStep < 5) {
         currentStep++;
     }
@@ -285,6 +442,14 @@ function nextStep() {
     }
     
     updateUI();
+    
+    // 在UI更新后处理自动生成
+    if (currentStep === 3 && window.isGeneratingOutline) {
+        // 自动生成大纲
+        setTimeout(() => {
+            generateOutline();
+        }, 100);
+    }
 }
 
 // 返回上一步

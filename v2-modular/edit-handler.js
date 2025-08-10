@@ -177,6 +177,23 @@ function saveEdit(elem) {
         
         // 更新对应的mock数据
         updateMockData(type, id, newContent);
+        
+        // 根据编辑的类型，静默清理后续数据
+        if (typeof clearDependentSteps === 'function') {
+            if (type === 'idea-title' || type === 'idea-content') {
+                // 编辑脑洞内容，清理大纲及后续
+                clearDependentSteps(2);
+                console.log('💾 保存脑洞编辑，已清理后续步骤数据');
+            } else if (type.includes('outline')) {
+                // 编辑大纲内容，清理小说及后续
+                clearDependentSteps(3);
+                console.log('💾 保存大纲编辑，已清理后续步骤数据');
+            } else if (type.includes('novel')) {
+                // 编辑小说内容，清理脚本
+                clearDependentSteps(4);
+                console.log('💾 保存小说编辑，已清理后续步骤数据');
+            }
+        }
     }
     
     // 清除编辑记录

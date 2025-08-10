@@ -9,9 +9,11 @@ async function startStreamingIdeas(userInput = null) {
         console.log('📝 用户创意输入:', userInput);
     }
     
-    // 清空容器
+    // 立即清空容器，防止旧内容闪现
     const container = document.getElementById('ideasContainer');
-    container.innerHTML = '';
+    if (container) {
+        container.innerHTML = '';
+    }
     
     // 显示流式加载动画
     showStreamLoading();
@@ -62,6 +64,12 @@ async function regenerateIdeas() {
     
     console.log('🔄 重新生成脑洞');
     
+    // 立即清空容器，防止旧内容闪现
+    const container = document.getElementById('ideasContainer');
+    if (container) {
+        container.innerHTML = '';
+    }
+    
     // 收集已有的脑洞标题
     const previousIdeas = [];
     parserState.stories.forEach(story => {
@@ -86,6 +94,12 @@ async function regenerateIdeas() {
     // 清空已选择的脑洞
     selectedIdea = null;
     
+    // 静默清理后续步骤的数据（因为要重新生成脑洞）
+    if (typeof clearDependentSteps === 'function') {
+        clearDependentSteps(2);
+        console.log('🔄 重新生成脑洞，已清理后续步骤数据');
+    }
+    
     // 隐藏底部控制区域
     hideBottomControls();
     
@@ -96,10 +110,6 @@ async function regenerateIdeas() {
         nextBtn.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
         nextBtn.classList.remove('bg-gradient-to-r', 'from-green-500', 'to-emerald-500', 'text-white', 'hover:shadow-lg');
     }
-    
-    // 清空容器
-    const container = document.getElementById('ideasContainer');
-    container.innerHTML = '';
     
     // 显示流式加载动画
     showStreamLoading();
@@ -273,7 +283,11 @@ function detectAndProcessSimplifiedXML() {
         if (story) {
             story.titleStarted = true;
             parserState.currentTag = 'title';
-            parserState.buffer = '';
+            // 不清空buffer，保留之前的内容，只需要去掉前面不需要的部分
+            const titleTagIndex = parserState.buffer.lastIndexOf('<title>');
+            if (titleTagIndex !== -1) {
+                parserState.buffer = parserState.buffer.substring(titleTagIndex + 7); // 跳过'<title>'
+            }
         }
         return;
     }
@@ -312,7 +326,11 @@ function detectAndProcessSimplifiedXML() {
         if (story) {
             story.contentStarted = true;
             parserState.currentTag = 'content';
-            parserState.buffer = '';
+            // 不清空buffer，保留之前的内容，只需要去掉前面不需要的部分
+            const contentTagIndex = parserState.buffer.lastIndexOf('<content>');
+            if (contentTagIndex !== -1) {
+                parserState.buffer = parserState.buffer.substring(contentTagIndex + 9); // 跳过'<content>'
+            }
             removeTitleCursor(story.number);
         }
         return;
@@ -424,6 +442,13 @@ function showBottomControls() {
             controls.classList.remove('opacity-0', 'translate-y-4');
             controls.classList.add('opacity-100', 'translate-y-0');
         }, 50);
+        
+        // 更新工作流状态 - 脑洞生成完成
+        if (typeof workflowState !== 'undefined') {
+            workflowState.steps[2].completed = true;
+            workflowState.steps[2].hasData = true;
+            console.log('✅ 脑洞生成完成，更新状态');
+        }
         
         // 启用下一步按钮（如果有选中的脑洞）
         if (selectedIdea) {

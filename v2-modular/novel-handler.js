@@ -15,6 +15,18 @@ const novelParserState = {
 async function generateNovel() {
     console.log('📚 开始生成小说');
     
+    // 立即清空容器，防止旧内容闪现
+    const container = document.getElementById('novelContainer');
+    if (container) {
+        container.innerHTML = '';
+    }
+    
+    // 静默清理后续步骤的数据（因为要生成新小说）
+    if (typeof clearDependentSteps === 'function') {
+        clearDependentSteps(4);
+        console.log('🔄 生成新小说，已清理后续步骤数据');
+    }
+    
     // 获取大纲内容
     const outline = outlineParserState.outline;
     if (!outline.open || !outline.build || !outline.turn || !outline.end) {
@@ -25,8 +37,7 @@ async function generateNovel() {
     
     console.log('📖 使用大纲:', outline);
     
-    // 清空容器并显示加载动画
-    const container = document.getElementById('novelContainer');
+    // 显示加载动画
     if (container) {
         showNovelLoading();
         // 重置滚动管理器
@@ -64,6 +75,16 @@ async function generateNovel() {
                 // 保存小说到localStorage
                 localStorage.setItem('currentNovel', novelParserState.content);
                 
+                // 更新工作流状态 - 小说生成完成
+                if (typeof workflowState !== 'undefined') {
+                    workflowState.steps[4].completed = true;
+                    workflowState.steps[4].hasData = true;
+                    console.log('✅ 小说生成完成，更新状态');
+                }
+                
+                // 清除生成标记
+                window.isGeneratingNovel = false;
+                
                 // 启用脚本生成按钮
                 if (scriptBtn) {
                     scriptBtn.disabled = false;
@@ -93,6 +114,18 @@ async function regenerateNovel() {
     
     console.log('🔄 重新生成小说');
     
+    // 立即清空容器，防止旧内容闪现
+    const container = document.getElementById('novelContainer');
+    if (container) {
+        container.innerHTML = '';
+    }
+    
+    // 静默清理后续步骤的数据（因为要重新生成小说）
+    if (typeof clearDependentSteps === 'function') {
+        clearDependentSteps(4);
+        console.log('🔄 重新生成小说，已清理后续步骤数据');
+    }
+    
     // 获取大纲内容
     const outline = outlineParserState.outline;
     if (!outline.open || !outline.build || !outline.turn || !outline.end) {
@@ -101,8 +134,7 @@ async function regenerateNovel() {
         return;
     }
     
-    // 清空容器并显示加载动画
-    const container = document.getElementById('novelContainer');
+    // 显示加载动画
     if (container) {
         showNovelLoading(true); // true表示重新生成
     }
@@ -223,6 +255,7 @@ function detectAndProcessNovelXML() {
     if (novelParserState.novelStarted && !novelParserState.textStarted && tagBuffer.endsWith('<text>')) {
         console.log('📝 检测到text标签开始');
         novelParserState.textStarted = true;
+        // 清空buffer，准备接收text内容
         novelParserState.buffer = '';
         
         // 隐藏加载动画
