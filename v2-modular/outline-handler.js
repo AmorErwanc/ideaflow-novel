@@ -443,18 +443,27 @@ function enableOutlineEdit(sectionId, type) {
         const wrapper = element.querySelector('.content-wrapper');
         const originalContent = wrapper.textContent;
         
-        // 创建文本域
+        // 获取父容器以保持样式一致
+        const parentSection = element.closest('.outline-section');
+        
+        // 创建文本域 - 使用透明背景让它继承父容器的白色背景
         const textarea = document.createElement('textarea');
         textarea.value = originalContent;
-        // 保持与原容器相同的样式：白色背景、圆角、边框、内边距
-        textarea.className = 'w-full p-4 bg-white rounded-xl border border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all resize-none text-gray-600 leading-relaxed';
+        textarea.className = 'w-full p-0 bg-transparent border-0 focus:outline-none resize-none text-gray-600 leading-relaxed';
+        
         // 动态计算行数以适应内容
         const lineCount = originalContent.split('\n').length;
-        textarea.rows = Math.max(4, Math.min(lineCount + 1, 10));
+        textarea.rows = Math.max(4, Math.min(lineCount + 2, 12));
+        
+        // 给父容器添加编辑状态的视觉反馈
+        if (parentSection) {
+            parentSection.classList.add('editing-mode');
+        }
         
         wrapper.style.display = 'none';
         element.insertBefore(textarea, wrapper);
         textarea.focus();
+        textarea.select();
         
         // 隐藏编辑图标
         const editIcon = element.querySelector('.edit-icon');
@@ -474,6 +483,10 @@ function enableOutlineEdit(sectionId, type) {
                 saveOutlineToStorage();
                 showSaveHint();
             }
+            // 移除编辑状态
+            if (parentSection) {
+                parentSection.classList.remove('editing-mode');
+            }
             wrapper.style.display = '';
             textarea.remove();
             editIcon.style.display = '';
@@ -483,6 +496,10 @@ function enableOutlineEdit(sectionId, type) {
         // 取消功能
         controls.querySelector('.cancel-btn').onclick = () => {
             wrapper.textContent = originalContent;
+            // 移除编辑状态
+            if (parentSection) {
+                parentSection.classList.remove('editing-mode');
+            }
             wrapper.style.display = '';
             textarea.remove();
             editIcon.style.display = '';
