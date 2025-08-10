@@ -498,16 +498,16 @@ function enableOutlineEdit(sectionId, type) {
                 </span>
             </div>
             
-            <!-- 编辑区域 - 移除多余的包装层 -->
+            <!-- 编辑区域 - 移除底部间距 -->
             <textarea class="w-full p-3 bg-white border border-gray-200 rounded-lg 
                            focus:border-blue-400 focus:ring-2 focus:ring-blue-100 
                            transition-all duration-200 text-gray-700 leading-relaxed
-                           placeholder-gray-400 resize-vertical mb-3"
-                      style="min-height: 150px; height: 200px;"
+                           placeholder-gray-400 resize-vertical"
+                      style="min-height: 150px; height: 200px; margin-bottom: 0;"
                       placeholder="在这里编辑内容..."></textarea>
             
-            <!-- 底部按钮组 - 移除额外的padding -->
-            <div class="flex justify-between items-center pt-2 border-t border-gray-100">
+            <!-- 底部按钮组 - 移除顶部内边距和边框 -->
+            <div class="flex justify-between items-center mt-3">
                 <span class="text-xs text-gray-400">
                     <i class="fas fa-info-circle mr-1"></i>
                     修改将自动保存
