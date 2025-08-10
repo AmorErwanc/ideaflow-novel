@@ -449,11 +449,18 @@ function showScriptControls() {
                         placeholder="输入优化建议，比如：增加更多对话内容...">
                     <i class="fas fa-comment-dots text-gray-400 absolute left-3 top-3.5"></i>
                 </div>
-                <button 
-                    onclick="regenerateScript()" 
-                    class="bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-6 rounded-lg font-medium transition-colors flex items-center">
-                    <i class="fas fa-sync-alt mr-2"></i>重新生成
-                </button>
+                <div class="flex gap-2">
+                    <button 
+                        onclick="downloadScript()" 
+                        class="bg-blue-500 hover:bg-blue-600 text-white py-3 px-6 rounded-lg font-medium transition-colors flex items-center">
+                        <i class="fas fa-download mr-2"></i>下载
+                    </button>
+                    <button 
+                        onclick="regenerateScript()" 
+                        class="bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-6 rounded-lg font-medium transition-colors flex items-center">
+                        <i class="fas fa-sync-alt mr-2"></i>重新生成
+                    </button>
+                </div>
             </div>
         </div>
     `;
