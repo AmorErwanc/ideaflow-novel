@@ -447,9 +447,12 @@ function enableOutlineEdit(sectionId, type) {
 
         // 创建一个编辑容器，覆盖在原内容上
         const editContainer = document.createElement('div');
-        editContainer.className = 'absolute inset-0 bg-white rounded-xl p-4 z-10 shadow-xl outline-edit-container';
+        editContainer.className = 'absolute inset-0 bg-white rounded-xl p-4 z-10 shadow-xl outline-edit-container overflow-hidden';
         editContainer.style.border = '1px solid #e5e7eb';
-        editContainer.style.background = 'linear-gradient(to bottom, #ffffff, #fafafa)';
+        editContainer.style.backgroundColor = '#ffffff';  // 使用纯白色背景，确保不透明
+        editContainer.style.minHeight = '100%';
+        editContainer.style.height = '100%';  // 强制100%高度
+        editContainer.style.boxSizing = 'border-box';  // 确保padding包含在高度内
 
         // 创建标题显示（保持一致性）
         const sectionInfo = {
@@ -462,43 +465,45 @@ function enableOutlineEdit(sectionId, type) {
         const info = sectionInfo[sectionId];
 
         editContainer.innerHTML = `
-            <!-- 顶部标题栏 -->
-            <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-100">
-                <h4 class="text-lg font-semibold text-gray-800 flex items-center">
-                    <i class="fas fa-${info.icon} text-${info.color}-500 mr-2"></i>
-                    <span>${info.title}</span>
-                </h4>
-                <span class="text-xs text-gray-500">
-                    <i class="fas fa-keyboard mr-1"></i>
-                    ESC取消 · Ctrl+Enter保存
-                </span>
-            </div>
-            
-            <!-- 编辑区域 -->
-            <textarea class="w-full p-3 bg-white border border-gray-200 rounded-lg 
-                           focus:border-blue-400 focus:ring-2 focus:ring-blue-100 
-                           transition-all duration-200 text-gray-700 leading-relaxed
-                           placeholder-gray-400"
-                      placeholder="在这里编辑内容..."></textarea>
-            
-            <!-- 底部按钮组 -->
-            <div class="flex justify-between items-center mt-3 pt-2 border-t border-gray-100">
-                <span class="text-xs text-gray-400">
-                    <i class="fas fa-info-circle mr-1"></i>
-                    修改将自动保存
-                </span>
-                <div class="flex gap-2">
-                    <button class="cancel-btn px-4 py-1.5 bg-white border border-gray-300 
-                                  hover:bg-gray-50 text-gray-600 rounded-md text-sm 
-                                  transition-all duration-200 hover:shadow-sm">
-                        <i class="fas fa-times mr-1.5"></i>取消
-                    </button>
-                    <button class="save-btn px-4 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 
-                                  hover:from-blue-600 hover:to-blue-700 text-white rounded-md 
-                                  text-sm transition-all duration-200 hover:shadow-md 
-                                  transform hover:scale-105">
-                        <i class="fas fa-check mr-1.5"></i>保存更改
-                    </button>
+            <div class="h-full flex flex-col">
+                <!-- 顶部标题栏 -->
+                <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-100">
+                    <h4 class="text-lg font-semibold text-gray-800 flex items-center">
+                        <i class="fas fa-${info.icon} text-${info.color}-500 mr-2"></i>
+                        <span>${info.title}</span>
+                    </h4>
+                    <span class="text-xs text-gray-500">
+                        <i class="fas fa-keyboard mr-1"></i>
+                        ESC取消 · Ctrl+Enter保存
+                    </span>
+                </div>
+                
+                <!-- 编辑区域 - 使用flex-1让它占据剩余空间 -->
+                <textarea class="flex-1 w-full p-3 bg-white border border-gray-200 rounded-lg 
+                               focus:border-blue-400 focus:ring-2 focus:ring-blue-100 
+                               transition-all duration-200 text-gray-700 leading-relaxed
+                               placeholder-gray-400 resize-none"
+                          placeholder="在这里编辑内容..."></textarea>
+                
+                <!-- 底部按钮组 -->
+                <div class="flex justify-between items-center mt-3 pt-2 border-t border-gray-100">
+                    <span class="text-xs text-gray-400">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        修改将自动保存
+                    </span>
+                    <div class="flex gap-2">
+                        <button class="cancel-btn px-4 py-1.5 bg-white border border-gray-300 
+                                      hover:bg-gray-50 text-gray-600 rounded-md text-sm 
+                                      transition-all duration-200 hover:shadow-sm">
+                            <i class="fas fa-times mr-1.5"></i>取消
+                        </button>
+                        <button class="save-btn px-4 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 
+                                      hover:from-blue-600 hover:to-blue-700 text-white rounded-md 
+                                      text-sm transition-all duration-200 hover:shadow-md 
+                                      transform hover:scale-105">
+                            <i class="fas fa-check mr-1.5"></i>保存更改
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -507,11 +512,10 @@ function enableOutlineEdit(sectionId, type) {
         sectionContainer.style.position = 'relative';
         sectionContainer.appendChild(editContainer);
 
-        // 设置textarea内容和高度
+        // 设置textarea内容
         const textarea = editContainer.querySelector('textarea');
         textarea.value = originalContent;
-        const lineCount = originalContent.split('\n').length;
-        textarea.rows = Math.max(4, Math.min(lineCount + 2, 12));
+        // 不再设置rows，因为使用flex布局自动调整高度
         textarea.focus();
         textarea.select();
 
