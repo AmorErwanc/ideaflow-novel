@@ -62,7 +62,7 @@ async function regenerateIdeas() {
     const optimizeInput = document.getElementById('optimizeIdeasInput');
     const userSuggestion = optimizeInput ? optimizeInput.value.trim() : '';
     
-    console.log('🔄 重新生成脑洞');
+    console.log('🔄 重新生成脑洞，优化建议:', userSuggestion || '无');
     
     // 立即清空容器，防止旧内容闪现
     const container = document.getElementById('ideasContainer');
@@ -72,8 +72,8 @@ async function regenerateIdeas() {
     
     // 收集已有的脑洞标题
     const previousIdeas = [];
-    parserState.stories.forEach(story => {
-        if (story.title) {
+    parserState.stories.forEach((story, key) => {
+        if (story && story.title) {
             previousIdeas.push(story.title);
         }
     });
@@ -148,6 +148,10 @@ async function regenerateIdeas() {
             // onComplete回调
             () => {
                 console.log('✅ 重新生成完成');
+                // 清空优化输入框
+                if (optimizeInput) {
+                    optimizeInput.value = '';
+                }
                 // 显示底部控制区域
                 setTimeout(() => {
                     showBottomControls();
@@ -209,6 +213,9 @@ function resetParserState() {
     parserState.inStory = false;
     parserState.storiesStarted = false;
 }
+
+// 将函数暴露到全局作用域
+window.regenerateIdeas = regenerateIdeas;
 
 // 处理流式内容
 function processStreamContent(fullContent) {

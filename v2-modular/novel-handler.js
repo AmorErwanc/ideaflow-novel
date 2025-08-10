@@ -501,6 +501,9 @@ function showNovelLoading(isRegenerate = false) {
     }, 15000);
 }
 
+// 将函数暴露到全局作用域
+window.regenerateNovel = regenerateNovel;
+
 // 隐藏小说加载动画
 function hideNovelLoading() {
     const loadingDiv = document.getElementById('novelStreamLoading');

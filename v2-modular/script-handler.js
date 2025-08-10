@@ -544,6 +544,9 @@ function hideScriptLoading() {
     }
 }
 
+// 将函数暴露到全局作用域
+window.regenerateScript = regenerateScript;
+
 // 完成工作流
 function completeWorkflow() {
     console.log('🎉 工作流完成！');

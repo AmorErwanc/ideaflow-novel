@@ -791,6 +791,9 @@ function hideOutlineLoading() {
     }
 }
 
+// 将函数暴露到全局作用域
+window.regenerateOutline = regenerateOutline;
+
 // 恢复缓存的大纲内容
 function restoreCachedOutline() {
     const cachedOutline = localStorage.getItem('currentOutline');
