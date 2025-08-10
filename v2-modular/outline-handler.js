@@ -310,8 +310,14 @@ function detectAndProcessOutlineXML() {
         if (outlineParserState.plotStarted && tagBuffer.endsWith(`<${section}>`)) {
             console.log(`📝 ${sectionTitles[section]}开始`);
             outlineParserState.currentTag = section;
-            // 清空buffer，准备接收新内容
-            outlineParserState.buffer = '';
+            // 只移除标签本身，保留标签后的内容
+            const tagIndex = outlineParserState.buffer.indexOf(`<${section}>`);
+            if (tagIndex !== -1) {
+                outlineParserState.buffer = outlineParserState.buffer.substring(tagIndex + section.length + 2); // 跳过'<section>'
+            } else {
+                // 如果找不到完整标签（可能被分片），清空buffer
+                outlineParserState.buffer = '';
+            }
             return;
         }
         
